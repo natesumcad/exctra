@@ -9,7 +9,7 @@ export default function About() {
     <main className="wrap prose">
       <h1>How match grades work</h1>
       <p>
-        Exctra lists {ECS.length.toLocaleString()} opportunities: real named programs plus specific project, job, club, and volunteering ideas. Each one is tagged with the majors it supports, the strengths it uses, the school subjects it draws on, and roughly how many hours a week it takes.
+        Exctra lists {ECS.length.toLocaleString()} opportunities: real named programs and scholarships plus specific project, job, club, and volunteering ideas. Each one is tagged with the majors it supports, the strengths it uses, the school subjects it draws on, and roughly how many hours a week it takes.
         As you check boxes, every activity gets a score:
       </p>
       <table className="score-table">
@@ -34,6 +34,15 @@ export default function About() {
           <tr><td>C+ / C</td><td>Below 30%</td></tr>
         </tbody>
       </table>
+      <h2>College chances</h2>
+      <p>
+        The Chances tab starts from each college&apos;s overall admit rate, then shifts the odds based on
+        how your GPA, test scores, AP load and scores, activities, and awards compare with typical
+        admitted students. Some majors, like computer science at large public universities, are
+        harder to get into than the school overall, and the estimate accounts for that. Very
+        selective schools are capped, because no one is a sure thing there. The college figures are
+        rounded public numbers and change every year.
+      </p>
       <h2>What it doesn't know</h2>
       <p>
         It doesn't know what your school offers, what you already do, or what you actually enjoy.

@@ -115,6 +115,11 @@ export default function Dashboard() {
             </ul>
           )}
         </section>
+        <section className="side-card">
+          <div className="section-label">College chances</div>
+          <p className="muted small-print">See estimated odds at about 85 colleges from your grades, scores, and activities.</p>
+          <Link href="/chances" className="btn top-gap">Open Chances</Link>
+        </section>
       </aside>
     </main>
   );

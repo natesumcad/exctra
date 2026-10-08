@@ -1,5 +1,6 @@
 import { CURATED } from "./catalog/curated";
 import { generated } from "./catalog/generated";
+import { SCHOLARSHIPS } from "./catalog/scholarships";
 import {
   CATEGORY_CODES, COMMIT_CODES, FORMAT_CODES, MAJOR_CODES, STRENGTH_CODES, SUBJECT_CODES, TYPE_CODES,
   type Category, type Commitment, type Format, type Major, type OppType, type Row, type Strength, type Subject,
@@ -54,7 +55,7 @@ function parse(row: Row, curated: boolean): EC {
 }
 
 function build(): EC[] {
-  const all = [...CURATED.map((r) => parse(r, true)), ...generated().map((r) => parse(r, false))];
+  const all = [...CURATED.map((r) => parse(r, true)), ...SCHOLARSHIPS.map((r) => parse(r, true)), ...generated().map((r) => parse(r, false))];
   const seen = new Set<string>();
   return all.filter((ec) => (seen.has(ec.slug) ? false : (seen.add(ec.slug), true)));
 }

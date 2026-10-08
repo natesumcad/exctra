@@ -293,3 +293,47 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   border-top: 1px solid var(--rule); font-size: .82rem; color: var(--muted); }
 .footer-links { display: flex; gap: 20px; }
 .footer-links a { color: var(--muted); }
+
+/* College chances */
+.chances-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 28px; padding-top: 28px; padding-bottom: 72px; align-items: start; }
+@media (max-width: 920px) { .chances-layout { grid-template-columns: 1fr; } }
+.chances-inputs .panel-section { padding: 18px 20px; margin-bottom: 12px; }
+.chances-inputs .field { margin: 10px 0 6px; }
+select.full { width: 100%; margin-top: 8px; }
+.hint { font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
+.two-col.tight { gap: 10px; margin-top: 0; }
+.top-gap { margin-top: 16px !important; }
+.ap-add { display: grid; grid-template-columns: minmax(0, 1fr) 60px auto; gap: 6px; margin-top: 10px; }
+.ap-add select { min-width: 0; }
+.chances-results { min-width: 0; }
+.band-row { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); background: var(--surface); margin-bottom: 16px; }
+.band-cell { font: inherit; text-align: left; padding: 14px 16px; background: transparent; border: 0; border-left: 1px solid var(--rule); cursor: pointer; color: var(--ink); }
+.band-cell:first-child { border-left: 0; }
+.band-cell[aria-pressed="true"] { background: var(--accent-wash); box-shadow: inset 0 -2px 0 var(--accent); }
+.band-count { display: block; font-size: 1.6rem; line-height: 1.1; }
+.band-name { font-family: var(--font-mono), monospace; font-size: .7rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+@media (max-width: 520px) { .band-cell { padding: 10px; } .band-count { font-size: 1.2rem; } }
+.chances-toolbar select { flex: none; }
+@media (max-width: 520px) { .chances-toolbar { flex-wrap: wrap; } .chances-toolbar input { flex-basis: 100%; } }
+.college-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.college { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 20px; padding: 18px 4px; border-bottom: 1px solid var(--rule); }
+@media (max-width: 520px) { .college { grid-template-columns: minmax(0, 1fr) 96px; gap: 12px; } }
+.college-name { font-size: 1.05rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+.college-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: .75rem; color: var(--muted); }
+.college-chance { text-align: right; }
+.chance-pct { display: block; font-size: 1.7rem; line-height: 1; }
+.chance-band { display: block; font-family: var(--font-mono), monospace; font-size: .7rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 6px 0 8px; }
+.chance-bar { display: block; height: 4px; background: var(--surface-2); border: 1px solid var(--rule); }
+.chance-bar span { display: block; height: 100%; background: var(--accent); }
+.college-chance[data-band="Likely"] .chance-pct, .college-chance[data-band="Likely"] .chance-band { color: var(--accent); }
+.college-chance[data-band="Far reach"] .chance-bar span { background: var(--muted); }
+.why { margin-top: 8px; font-size: .85rem; }
+.why summary { cursor: pointer; color: var(--accent); width: fit-content; }
+.why ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.why li { display: grid; grid-template-columns: 150px minmax(0, 1fr) 100px; gap: 10px; padding: 6px 0; border-top: 1px solid var(--rule); }
+@media (max-width: 620px) { .why li { grid-template-columns: 1fr auto; } .why-note { grid-column: 1 / -1; grid-row: 2; } }
+.why-label { font-weight: 500; }
+.why-note { color: var(--muted); }
+.why-effect { text-align: right; font-family: var(--font-mono), monospace; font-size: .75rem; color: var(--muted); }
+.why-effect.up { color: var(--accent); }
+.why-effect.down { color: var(--warn); }

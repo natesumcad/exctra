@@ -1,8 +1,11 @@
 # Exctra
 
-Next.js app on Vercel that ranks 1,000 high school opportunities by intended majors, strengths, grades, and time.
+Next.js app on Vercel that ranks ~1,400 high school opportunities and scholarships by intended majors, strengths, grades, and time,
+and estimates college admission chances (`/chances`).
 
-Catalog: `lib/catalog/curated.ts` (real named programs) and `lib/catalog/generated.ts` (idea lists x templates).
+Catalog: `lib/catalog/curated.ts` (real named programs), `lib/catalog/scholarships.ts`, and `lib/catalog/generated.ts` (idea lists x templates).
+Chances: `lib/colleges.ts` (rounded public admissions figures) and `lib/chances.ts` (rule-based estimate). Keep the
+on-page disclaimer that these are rough estimates, not predictions.
 Rows use short codes from `lib/taxonomy.ts`; `lib/data.ts` validates them and throws on unknown codes at build.
 
 ## Deploying

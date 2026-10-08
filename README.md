@@ -1,6 +1,6 @@
 # Exctra
 
-A Next.js web app that searches 1,000 extracurricular opportunities and ranks them by a student's intended majors, strengths, course grades, and available time.
+A Next.js web app that searches about 1,400 extracurricular opportunities and scholarships and ranks them by a student's intended majors, strengths, course grades, and available time, and estimates college admission chances.
 
 ## Develop
 

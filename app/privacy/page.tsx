@@ -14,7 +14,7 @@ export default function Privacy() {
       <h2>Test accounts</h2>
       <p>
         Accounts are in testing. When you log in, your profile (first name, grade, majors,
-        strengths, time), course grades, profile photo, and saved activities are stored in your browser&apos;s local storage on
+        strengths, time), course grades, GPA, test and AP scores, profile photo, and saved activities are stored in your browser&apos;s local storage on
         this device only. Logging out keeps that data on the device; clearing your browser data
         deletes it. We&apos;ll update this policy before accounts store anything on a server.
       </p>

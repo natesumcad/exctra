@@ -8,6 +8,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { Commitment, Major, Strength } from "./data";
 import type { CourseGrade } from "./grades";
+import type { ApScore, AwardLevel } from "./chances";
 
 export const DEMO_USERS: Record<string, string> = { "1": "1" };
 
@@ -32,12 +33,22 @@ export interface SavedItem {
   savedAt: number;
 }
 
+export interface Academics {
+  major: Major | "";
+  gpa: string;
+  sat: string;
+  act: string;
+  aps: ApScore[];
+  award: AwardLevel;
+}
+
 interface AccountData {
   profile: Profile;
   saved: SavedItem[];
   courses: CourseGrade[];
   /** Profile photo as a small JPEG data URL. */
   avatar: string | null;
+  academics: Academics;
 }
 
 const EMPTY_DATA: AccountData = {
@@ -45,6 +56,7 @@ const EMPTY_DATA: AccountData = {
   saved: [],
   courses: [],
   avatar: null,
+  academics: { major: "", gpa: "", sat: "", act: "", aps: [], award: "none" },
 };
 
 const SESSION_KEY = "exctra:session";
@@ -70,7 +82,11 @@ function write(key: string, value: unknown): boolean {
 
 function load(u: string): AccountData {
   const d = read<Partial<AccountData>>(dataKey(u)) ?? {};
-  return { ...EMPTY_DATA, ...d, profile: { ...EMPTY_DATA.profile, ...d.profile } };
+  return {
+    ...EMPTY_DATA, ...d,
+    profile: { ...EMPTY_DATA.profile, ...d.profile },
+    academics: { ...EMPTY_DATA.academics, ...d.academics },
+  };
 }
 
 interface AccountContext {
@@ -81,6 +97,7 @@ interface AccountContext {
   logout: () => void;
   saveProfile: (p: Profile) => void;
   saveCourses: (c: CourseGrade[]) => void;
+  saveAcademics: (a: Academics) => void;
   setAvatar: (dataUrl: string | null) => boolean;
   clearData: () => void;
   isSaved: (slug: string) => boolean;
@@ -133,6 +150,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     saveProfile: (profile) => update((d) => ({ ...d, profile })),
     saveCourses: (courses) => update((d) => ({ ...d, courses })),
+    saveAcademics: (academics) => update((d) => ({ ...d, academics })),
     setAvatar: (avatar) => {
       if (!user) return false;
       const next = { ...data, avatar };

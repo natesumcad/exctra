@@ -129,7 +129,7 @@ export default function Finder() {
         <div className="wrap-inner">
           <p className="eyebrow">Opportunity search</p>
           <h1>{ready ? title : `${ECS.length.toLocaleString()} opportunities`}</h1>
-          <p className="lede">Competitions, summer programs, research, jobs, clubs, and projects. Check your majors and strengths to rank them.</p>
+          <p className="lede">Competitions, scholarships, summer programs, research, jobs, clubs, and projects. Check your majors and strengths to rank them.</p>
         </div>
       </div>
 

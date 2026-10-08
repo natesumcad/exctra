@@ -10,7 +10,7 @@ const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variabl
 
 export const metadata: Metadata = {
   title: { default: "Exctra: opportunities that fit you", template: "%s · Exctra" },
-  description: "Search 1,000 extracurricular opportunities and rank them by your intended majors, strengths, and grades.",
+  description: "Search 1,400+ opportunities and scholarships and rank them by your intended majors, strengths, and grades.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -23,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="wordmark"><span className="mark" aria-hidden="true" />exctra</Link>
               <span className="nav-links">
                 <Link href="/" className="hide-sm">Search</Link>
+                <Link href="/chances">Chances</Link>
                 <Link href="/about" className="hide-sm">How grades work</Link>
                 <NavAccount />
               </span>

@@ -86,6 +86,7 @@ export const TYPE_CODES = {
   res: "Research",
   proj: "Independent project",
   course: "Online course",
+  schol: "Scholarship",
 } as const;
 
 export const FORMAT_CODES = { o: "Online", p: "In person", b: "Online or in person" } as const;
