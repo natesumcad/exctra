@@ -10,7 +10,8 @@ npm run dev
 ```
 
 - EC catalog: `lib/data.ts`: add or edit activities here.
-- Scoring: `lib/recommend.ts`: major match (+5), each matching strength (+2), penalty for exceeding the chosen time commitment.
+- Scoring and grades: `lib/recommend.ts`. One matching major +5, each extra matching major +1, each matching strength +2, minus 2 per time level over budget. Grades compare against the best score for your picks.
+- Pages: search at `/`, activity profiles at `/activities/[slug]`, plus `/about`, `/privacy`, `/terms`.
 
 ## Deploy
 

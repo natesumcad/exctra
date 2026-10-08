@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <nav className="topbar">
           <Link href="/" className="wordmark">Exctra</Link>
-          <Link href="/about">How scoring works</Link>
+          <span className="nav-links"><Link href="/">Search activities</Link><Link href="/about">How grades work</Link></span>
         </nav>
         {children}
         <footer className="footer">

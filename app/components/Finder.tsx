@@ -1,58 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MAJORS, STRENGTHS, type Commitment, type Major, type Strength } from "@/lib/data";
-import { fromQuery, recommend, toQuery, type Answers } from "@/lib/recommend";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import {
+  CATEGORIES, ECS, HOURS, MAJORS, STRENGTHS, slugify,
+  type Category, type Commitment, type Major, type Strength,
+} from "@/lib/data";
+import { EMPTY, LAST_SEARCH_KEY, fromQuery, search, toQuery, type Filters, type Result, type Sort } from "@/lib/recommend";
 
-const TIME: { value: Commitment; label: string; hint: string }[] = [
-  { value: "low", label: "Light", hint: "1 to 3 hrs a week" },
-  { value: "medium", label: "Steady", hint: "4 to 8 hrs a week" },
-  { value: "high", label: "All in", hint: "9+ hrs a week" },
+
+const TIME: { value: Commitment | "any"; label: string; hint?: string }[] = [
+  { value: "any", label: "Any amount" },
+  { value: "low", label: "Light", hint: "1 to 3 hrs/wk" },
+  { value: "medium", label: "Steady", hint: "4 to 8 hrs/wk" },
+  { value: "high", label: "All in", hint: "9+ hrs/wk" },
 ];
-const timeLabel = (c: Commitment) => TIME.find((t) => t.value === c)!.hint;
-const MAX_SCORE = 5 + 4 * 2;
+
+const toggleIn = <T,>(list: T[], x: T) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x]);
+
+function listPhrase(items: string[]) {
+  if (items.length <= 2) return items.join(" and ");
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
 
 export default function Finder() {
   const [ready, setReady] = useState(false);
-  const [major, setMajor] = useState<Major | "">("");
-  const [strengths, setStrengths] = useState<Strength[]>([]);
-  const [commitment, setCommitment] = useState<Commitment>("medium");
-  const [submitted, setSubmitted] = useState<Answers | null>(null);
+  const [f, setF] = useState<Filters>(EMPTY);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Restore answers from a shared link.
   useEffect(() => {
-    const a = fromQuery(window.location.search);
-    if (a) {
-      setMajor(a.major);
-      setStrengths(a.strengths);
-      setCommitment(a.commitment);
-      setSubmitted(a);
-    }
+    setF(fromQuery(window.location.search));
     setReady(true);
   }, []);
 
-  const toggle = (s: Strength) =>
-    setStrengths((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!major) return;
-    const a = { major, strengths, commitment };
-    setSubmitted(a);
+  // Keep the URL in sync so the search can be shared or bookmarked.
+  useEffect(() => {
+    if (!ready) return;
+    const q = toQuery(f);
+    window.history.replaceState(null, "", q ? `?${q}` : window.location.pathname);
+    try { sessionStorage.setItem(LAST_SEARCH_KEY, q); } catch {}
     setCopied(false);
-    window.history.replaceState(null, "", `?${toQuery(a)}`);
-    if (window.matchMedia("(max-width: 860px)").matches)
-      document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [f, ready]);
 
-  const reset = () => {
-    setMajor("");
-    setStrengths([]);
-    setCommitment("medium");
-    setSubmitted(null);
-    window.history.replaceState(null, "", window.location.pathname);
-  };
+  const set = (patch: Partial<Filters>) => setF((cur) => ({ ...cur, ...patch }));
+  const results = useMemo(() => search(f), [f]);
+  const activeCount = f.majors.length + f.strengths.length + f.categories.length + (f.time !== "any" ? 1 : 0);
+
+  const title = f.majors.length
+    ? `Best Extracurriculars for ${listPhrase(f.majors.filter((m) => m !== "Undecided"))}${f.majors.some((m) => m !== "Undecided") ? " Majors" : "Undecided Students"}`
+    : f.strengths.length
+      ? "Best Extracurriculars for Your Strengths"
+      : `Explore ${ECS.length} Extracurriculars`;
 
   const share = async () => {
     try {
@@ -63,112 +62,160 @@ export default function Finder() {
     }
   };
 
-  const results = submitted ? recommend(submitted) : [];
+  const sidebar = (
+    <>
+      <CheckGroup title="Intended majors" note="Select all that apply" all={MAJORS} picked={f.majors}
+        onToggle={(m) => set({ majors: toggleIn(f.majors, m) })} onClear={() => set({ majors: [] })} initial={6} />
+      <CheckGroup title="Strengths" note="Select all that apply" all={STRENGTHS} picked={f.strengths}
+        onToggle={(s) => set({ strengths: toggleIn(f.strengths, s) })} onClear={() => set({ strengths: [] })} initial={6} />
+      <section className="fgroup">
+        <h3 className="fgroup-title">Time per week</h3>
+        {TIME.map((t) => (
+          <label key={t.value} className="check">
+            <input type="radio" name="time" checked={f.time === t.value} onChange={() => set({ time: t.value })} />
+            <span>{t.label}{t.hint && <span className="muted"> · {t.hint}</span>}</span>
+          </label>
+        ))}
+      </section>
+      <CheckGroup title="Activity type" all={CATEGORIES} picked={f.categories}
+        onToggle={(c) => set({ categories: toggleIn(f.categories, c) })} onClear={() => set({ categories: [] })}
+        counts={Object.fromEntries(CATEGORIES.map((c) => [c, ECS.filter((ec) => ec.category === c).length]))} initial={9} />
+      {activeCount > 0 && (
+        <button type="button" className="link" onClick={() => setF({ ...EMPTY, q: f.q, sort: f.sort })}>Clear all filters</button>
+      )}
+    </>
+  );
 
   return (
-    <div className="finder">
-      <form onSubmit={submit} className="panel">
-        <div className="q">
-          <label htmlFor="major" className="q-title"><span className="q-num">01</span>Intended major</label>
-          <select id="major" value={major} onChange={(e) => setMajor(e.target.value as Major)} required>
-            <option value="" disabled>Choose one</option>
-            {MAJORS.map((m) => <option key={m}>{m}</option>)}
-          </select>
+    <main>
+      <div className="page-head">
+        <div className="wrap-inner">
+          <p className="crumb"><Link href="/">Exctra</Link> / Extracurricular search</p>
+          <h1>{ready ? title : `Explore ${ECS.length} Extracurriculars`}</h1>
+          <p className="lede">Check your intended majors and strengths. Each activity gets a match grade, and you can open any one for the details and a first step.</p>
         </div>
+      </div>
 
-        <fieldset className="q">
-          <legend className="q-title"><span className="q-num">02</span>Strengths <span className="muted">pick up to 4</span></legend>
-          <div className="options">
-            {STRENGTHS.map((s) => {
-              const on = strengths.includes(s);
-              return (
-                <button type="button" key={s} className="opt" aria-pressed={on}
-                  disabled={!on && strengths.length >= 4} onClick={() => toggle(s)}>
-                  {s}
-                </button>
-              );
-            })}
+      <div className="wrap-inner search-layout">
+        <aside className="sidebar" aria-label="Filters">{sidebar}</aside>
+
+        <section className="results" aria-live="polite">
+          <div className="toolbar">
+            <input type="search" placeholder="Search activities" value={f.q} aria-label="Search activities"
+              onChange={(e) => set({ q: e.target.value })} />
+            <button type="button" className="filters-btn" onClick={() => setSheetOpen(true)}>
+              Filters{activeCount > 0 && ` (${activeCount})`}
+            </button>
           </div>
-        </fieldset>
-
-        <fieldset className="q">
-          <legend className="q-title"><span className="q-num">03</span>Time you can give</legend>
-          <div className="seg">
-            {TIME.map((t) => (
-              <button type="button" key={t.value} aria-pressed={commitment === t.value}
-                onClick={() => setCommitment(t.value)}>
-                <strong>{t.label}</strong>
-                <span>{t.hint}</span>
-              </button>
-            ))}
+          <div className="results-meta">
+            <span>{ready ? `${results.length} ${results.length === 1 ? "result" : "results"}` : "Loading"}</span>
+            <span className="meta-right">
+              {activeCount > 0 && <button type="button" className="link" onClick={share}>{copied ? "Link copied" : "Copy link"}</button>}
+              <label>
+                Sort by{" "}
+                <select value={f.sort} onChange={(e) => set({ sort: e.target.value as Sort })}>
+                  <option value="match">Best match</option>
+                  <option value="time">Least time</option>
+                  <option value="name">Name</option>
+                </select>
+              </label>
+            </span>
           </div>
-        </fieldset>
 
-        <div className="actions">
-          <button type="submit" className="btn" disabled={!major}>Rank activities</button>
-          {submitted && <button type="button" className="link" onClick={reset}>Start over</button>}
-        </div>
-      </form>
-
-      <section id="results" className="results" aria-live="polite">
-        {!ready ? (
-          <Skeleton />
-        ) : !submitted ? (
-          <div className="empty">
-            <p className="empty-title">Your ranked list shows up here.</p>
-            <p>Each result explains which of your answers it matched, how many hours it usually takes, and one concrete way to start this month.</p>
-          </div>
-        ) : (
-          <>
-            <div className="results-head">
-              <h2>{results.length ? `Top ${results.length} for ${submitted.major}` : "No strong matches"}</h2>
-              {results.length > 0 && (
-                <button type="button" className="link" onClick={share}>{copied ? "Link copied" : "Copy share link"}</button>
-              )}
+          {!ready ? <Skeleton /> : results.length === 0 ? (
+            <div className="empty">
+              <p className="empty-title">No activities match all of that.</p>
+              <p>Try removing an activity type, clearing the search box, or checking another strength.</p>
             </div>
-            {results.length === 0 && <p>Try choosing more strengths or a bigger time budget.</p>}
-            <ol className="list">
-              {results.map((r, i) => (
-                <li key={r.ec.name} className="item">
-                  <span className="rank">{i + 1}</span>
-                  <div className="item-body">
-                    <h3>{r.ec.name}</h3>
-                    <p className="desc">{r.ec.description}</p>
-                    <div className="meter" aria-label={`Match score ${r.score} of ${MAX_SCORE}`}>
-                      <span style={{ width: `${Math.min(100, (r.score / MAX_SCORE) * 100)}%` }} />
-                    </div>
-                    <dl className="facts">
-                      <dt>Matched</dt>
-                      <dd>
-                        {[r.majorFit && submitted.major, ...r.matched].filter(Boolean).join(", ") || "General fit"}
-                      </dd>
-                      <dt>Time</dt>
-                      <dd>
-                        {timeLabel(r.ec.commitment)}
-                        {r.overTime > 0 && <span className="warn"> (more than you planned)</span>}
-                      </dd>
-                      <dt>Start</dt>
-                      <dd>{r.ec.tip}</dd>
-                    </dl>
-                  </div>
-                </li>
-              ))}
+          ) : (
+            <ol className="cards">
+              {results.map((r, i) => <ResultCard key={r.ec.name} r={r} rank={i + 1} showRank={f.sort === "match" && r.grade !== null} />)}
             </ol>
-          </>
+          )}
+        </section>
+      </div>
+
+      {sheetOpen && (
+        <div className="sheet" role="dialog" aria-modal="true" aria-label="Filters">
+          <div className="sheet-head">
+            <strong>Filters</strong>
+            <button type="button" className="link" onClick={() => setSheetOpen(false)}>Close</button>
+          </div>
+          <div className="sheet-body">{sidebar}</div>
+          <div className="sheet-foot">
+            <button type="button" className="btn" onClick={() => setSheetOpen(false)}>Show {results.length} results</button>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+function ResultCard({ r, rank, showRank }: { r: Result; rank: number; showRank: boolean }) {
+  const { ec } = r;
+  return (
+    <li className="card">
+      <div className="card-main">
+        {showRank && <span className="card-rank">#{rank} Best match</span>}
+        <h2 className="card-title"><Link href={`/activities/${slugify(ec.name)}`}>{ec.name}</Link></h2>
+        <p className="card-sub">{ec.category} · {HOURS[ec.commitment]}</p>
+        <p className="card-desc">{ec.description}</p>
+        {(r.matchedMajors.length > 0 || r.matched.length > 0 || r.overTime > 0) && (
+          <dl className="card-facts">
+            {r.matchedMajors.length > 0 && (<div><dt>Fits majors</dt><dd>{r.matchedMajors.join(", ")}</dd></div>)}
+            {r.matched.length > 0 && (<div><dt>Uses strengths</dt><dd>{r.matched.join(", ")}</dd></div>)}
+            {r.overTime > 0 && (<div><dt>Heads up</dt><dd className="warn">Takes more time than you picked</dd></div>)}
+          </dl>
         )}
-      </section>
-    </div>
+      </div>
+      {r.grade && (
+        <div className="grade" data-tier={r.grade[0]} aria-label={`Match grade ${r.grade}`}>
+          <span className="grade-letter">{r.grade}</span>
+          <span className="grade-label">Match</span>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function CheckGroup<T extends string>({ title, note, all, picked, onToggle, onClear, counts, initial }: {
+  title: string; note?: string; all: readonly T[]; picked: T[];
+  onToggle: (x: T) => void; onClear: () => void; counts?: Record<string, number>; initial: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  // Always show checked items, even if they sit past the fold.
+  const visible = expanded ? all : all.filter((x, i) => i < initial || picked.includes(x));
+  return (
+    <section className="fgroup">
+      <div className="fgroup-head">
+        <h3 className="fgroup-title">{title}</h3>
+        {picked.length > 0 && <button type="button" className="link small" onClick={onClear}>Clear</button>}
+      </div>
+      {note && <p className="fgroup-note">{note}</p>}
+      {visible.map((x) => (
+        <label key={x} className="check">
+          <input type="checkbox" checked={picked.includes(x)} onChange={() => onToggle(x)} />
+          <span>{x}</span>
+          {counts && <span className="count">{counts[x]}</span>}
+        </label>
+      ))}
+      {all.length > initial && (
+        <button type="button" className="link small" onClick={() => setExpanded(!expanded)}>
+          {expanded ? "Show fewer" : `Show all ${all.length}`}
+        </button>
+      )}
+    </section>
   );
 }
 
 function Skeleton() {
   return (
-    <div aria-hidden="true">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="sk-row">
-          <div className="sk" style={{ width: "45%", height: 18 }} />
-          <div className="sk" style={{ width: "80%" }} />
-          <div className="sk" style={{ width: "60%" }} />
+    <div aria-hidden="true" className="cards">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="card sk-card">
+          <div className="sk" style={{ width: "40%", height: 18 }} />
+          <div className="sk" style={{ width: "25%" }} />
+          <div className="sk" style={{ width: "85%" }} />
         </div>
       ))}
     </div>
