@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+import { AccountProvider } from "@/lib/auth";
+import NavAccount from "./components/NavAccount";
 
 const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-sans" });
 const serif = Source_Serif_4({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-serif" });
@@ -15,9 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
+        <AccountProvider>
         <nav className="topbar">
           <Link href="/" className="wordmark">Exctra</Link>
-          <span className="nav-links"><Link href="/">Search activities</Link><Link href="/about">How grades work</Link></span>
+          <span className="nav-links"><Link href="/">Search activities</Link><Link href="/about">How grades work</Link><NavAccount /></span>
         </nav>
         {children}
         <footer className="footer">
@@ -28,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/terms">Terms</Link>
           </span>
         </footer>
+        </AccountProvider>
       </body>
     </html>
   );

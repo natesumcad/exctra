@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ECS, HOURS, MAJORS, findBySlug, slugify } from "@/lib/data";
 import BackLink from "@/app/components/BackLink";
+import SaveButton from "@/app/components/SaveButton";
 
 const MAJOR_INDEX = Object.fromEntries(MAJORS.map((m, i) => [m, i])) as Record<string, number>;
 
@@ -27,8 +28,13 @@ export default async function ActivityPage({ params }: Props) {
       <div className="page-head">
         <div className="wrap-inner">
           <p className="crumb"><BackLink /> / {ec.category}</p>
-          <h1>{ec.name}</h1>
-          <p className="lede">{ec.description}</p>
+          <div className="head-row">
+            <div>
+              <h1>{ec.name}</h1>
+              <p className="lede">{ec.description}</p>
+            </div>
+            <SaveButton slug={slugify(ec.name)} name={ec.name} />
+          </div>
         </div>
       </div>
 

@@ -8,8 +8,15 @@ export default function Privacy() {
       <h1>Privacy</h1>
       <p className="muted">Last updated October 8, 2026</p>
       <p>
-        Exctra has no accounts and does not ask for your name, email, or school. Your answers are
-        processed entirely in your browser and are not sent to or stored on our servers.
+        Exctra does not ask for your email or school. Your search answers are processed entirely in
+        your browser and are not sent to or stored on our servers.
+      </p>
+      <h2>Test accounts</h2>
+      <p>
+        Accounts are in testing. When you log in, your profile (first name, grade, majors,
+        strengths, time) and saved activities are stored in your browser&apos;s local storage on
+        this device only. Logging out keeps that data on the device; clearing your browser data
+        deletes it. We&apos;ll update this policy before accounts store anything on a server.
       </p>
       <h2>Share links</h2>
       <p>

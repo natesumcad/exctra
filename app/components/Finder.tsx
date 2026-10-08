@@ -6,6 +6,8 @@ import {
   CATEGORIES, ECS, HOURS, MAJORS, STRENGTHS, slugify,
   type Category, type Commitment, type Major, type Strength,
 } from "@/lib/data";
+import { useAccount } from "@/lib/auth";
+import SaveButton from "./SaveButton";
 import { EMPTY, LAST_SEARCH_KEY, fromQuery, search, toQuery, type Filters, type Result, type Sort } from "@/lib/recommend";
 
 
@@ -44,6 +46,9 @@ export default function Finder() {
   }, [f, ready]);
 
   const set = (patch: Partial<Filters>) => setF((cur) => ({ ...cur, ...patch }));
+  const { user, data } = useAccount();
+  const profile = data.profile;
+  const hasProfile = profile.majors.length > 0 || profile.strengths.length > 0;
   const results = useMemo(() => search(f), [f]);
   const activeCount = f.majors.length + f.strengths.length + f.categories.length + (f.time !== "any" ? 1 : 0);
 
@@ -64,6 +69,12 @@ export default function Finder() {
 
   const sidebar = (
     <>
+      {user && hasProfile && (
+        <button type="button" className="use-profile"
+          onClick={() => setF({ ...EMPTY, q: f.q, sort: f.sort, majors: profile.majors, strengths: profile.strengths, time: profile.time })}>
+          Use my profile
+        </button>
+      )}
       <CheckGroup title="Intended majors" note="Select all that apply" all={MAJORS} picked={f.majors}
         onToggle={(m) => set({ majors: toggleIn(f.majors, m) })} onClear={() => set({ majors: [] })} initial={6} />
       <CheckGroup title="Strengths" note="Select all that apply" all={STRENGTHS} picked={f.strengths}
@@ -168,12 +179,15 @@ function ResultCard({ r, rank, showRank }: { r: Result; rank: number; showRank: 
           </dl>
         )}
       </div>
+      <div className="card-side">
       {r.grade && (
         <div className="grade" data-tier={r.grade[0]} aria-label={`Match grade ${r.grade}`}>
           <span className="grade-letter">{r.grade}</span>
           <span className="grade-label">Match</span>
         </div>
       )}
+        <SaveButton slug={slugify(ec.name)} name={ec.name} />
+      </div>
     </li>
   );
 }

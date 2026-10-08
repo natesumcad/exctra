@@ -19,3 +19,9 @@ Avoid the generic AI-generated look:
 - Fonts: Source Serif 4 + IBM Plex Sans, not Inter/Geist/Space Grotesk.
 - Copy: no em dashes, no "it's not X, it's Y", no vague checkmark bullets, no fake testimonials.
 - Include loading states, keep Privacy/Terms/404 pages working, check links don't break.
+
+## Accounts (placeholder)
+
+`lib/auth.tsx` is a stand-in: one demo account (username `1`, password `1`), data in localStorage.
+Pages only use `useAccount()`, so real auth can replace that file later. Update the Privacy page when
+account data moves to a server.

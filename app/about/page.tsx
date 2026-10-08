@@ -42,7 +42,7 @@ export default function About() {
       </p>
       <h2>We're early</h2>
       <p>
-        This is a new student project with no accounts and no paid tier. If an activity is missing
+        This is a new student project with test accounts only and no paid tier. If an activity is missing
         or a tag looks wrong, that's useful feedback.
       </p>
       <p><Link href="/">Back to the finder</Link></p>

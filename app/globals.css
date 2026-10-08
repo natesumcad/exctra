@@ -167,3 +167,60 @@ select:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible
 .footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 24px; padding-bottom: 32px; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); }
 .footer-links { display: flex; gap: 20px; }
 .footer-links a { color: var(--muted); }
+
+/* Accounts */
+.nav-links { align-items: baseline; }
+.nav-placeholder { display: inline-block; width: 64px; }
+.head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.card-side { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.save {
+  font: inherit; font-size: .85rem; font-weight: 600; color: var(--ink); background: transparent;
+  border: 1px solid var(--rule); border-radius: 3px; padding: 6px 12px; cursor: pointer; white-space: nowrap;
+}
+.save:hover { border-color: var(--ink); }
+.save.on { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
+.use-profile {
+  width: 100%; font: inherit; font-weight: 600; color: var(--accent); background: var(--accent-wash);
+  border: 1px solid var(--accent); border-radius: 3px; padding: 9px 12px; margin-bottom: 20px; cursor: pointer;
+}
+
+.auth { max-width: 420px; }
+.auth h1 { margin: 0 0 6px; }
+.form-panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 24px; margin: 24px 0 16px; }
+.field { display: block; border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.field > span, .field > legend { display: block; font-weight: 600; font-size: .93rem; margin-bottom: 8px; padding: 0; }
+.field legend .muted { font-weight: 400; font-size: .82rem; margin-left: 6px; }
+.field input:not([type="checkbox"]):not([type="radio"]), .field select {
+  width: 100%; font: inherit; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--rule); border-radius: 3px; padding: 10px 12px;
+}
+.form-panel .btn { width: 100%; }
+.error { color: var(--warn); margin: -6px 0 16px; font-size: .9rem; }
+.note { font-size: .88rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+
+.block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.block-head a { font-size: .9rem; }
+.status-group + .status-group { margin-top: 20px; }
+.status-title { font-family: var(--font-sans), system-ui, sans-serif; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 4px; }
+.mylist { list-style: none; margin: 0; padding: 0; }
+.mylist li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.mylist li > div:first-child { display: flex; flex-direction: column; min-width: 0; }
+.mylist .muted { font-size: .85rem; }
+.mylist-name { color: var(--ink); font-weight: 600; text-decoration: none; }
+.mylist-name:hover { text-decoration: underline; }
+.mylist-actions { display: flex; align-items: center; gap: 14px; flex: none; }
+.mylist-actions select { padding: 6px 8px; font-size: .88rem; background: var(--surface); }
+@media (max-width: 520px) { .mylist li { flex-direction: column; align-items: flex-start; gap: 8px; } }
+.side-facts { margin: 0; display: grid; gap: 4px; font-size: .92rem; }
+.side-facts dt { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 10px; }
+.side-facts dd { margin: 0; }
+.small-print { font-size: .82rem; margin: 18px 0 0; }
+.sk-page { display: grid; gap: 14px; padding-top: 48px; padding-bottom: 72px; }
+
+.profile-form { margin-top: 28px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 520px) { .two-col { grid-template-columns: 1fr; } }
+.check-cols { columns: 2; column-gap: 24px; }
+.check-cols .check { break-inside: avoid; }
+@media (max-width: 520px) { .check-cols { columns: 1; } }
+.form-actions { display: flex; align-items: center; gap: 20px; border-top: 1px solid var(--rule); padding-top: 20px; }
