@@ -9,9 +9,9 @@ npm install
 npm run dev
 ```
 
-- EC catalog: `lib/data.ts` — add or edit activities here.
-- Scoring: `lib/recommend.ts` — major match (+5), each matching strength (+2), penalty for exceeding the chosen time commitment.
+- EC catalog: `lib/data.ts`: add or edit activities here.
+- Scoring: `lib/recommend.ts`: major match (+5), each matching strength (+2), penalty for exceeding the chosen time commitment.
 
 ## Deploy
 
-Import the repo in Vercel — it auto-detects Next.js, no config needed.
+Import the repo in Vercel and it auto-detects Next.js, no config needed.
