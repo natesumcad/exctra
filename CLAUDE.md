@@ -26,9 +26,15 @@ Avoid the generic AI-generated look:
 - Copy: no em dashes, no "it's not X, it's Y", no vague checkmark bullets, no fake testimonials.
 - Include loading states, keep Privacy/Terms/404 pages working, check links don't break.
 
+## Layout
+
+Home (`/`) is a hero search plus horizontal shelves by opportunity type (personalized when logged in).
+`/explore` is the full list: search, type chips, a "More filters" chip panel, tile grid. No sidebar, no Save button.
+Profile is built in the step-by-step `/setup` (tiles, type-to-add classes, tap-to-grade). Avoid dropdowns for adding things.
+
 ## Accounts (placeholder)
 
 `lib/auth.tsx` is a stand-in: one demo account (username `1`, password `1`), data in localStorage
-(profile, saved list, course grades, avatar as a 256px JPEG data URL).
+(profile incl. activities done, classes with grades/AP scores, test scores, avatar as a 256px JPEG data URL).
 Pages only use `useAccount()`, so real auth can replace that file later. Update the Privacy page when
 account data moves to a server.

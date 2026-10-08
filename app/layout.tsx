@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="topbar">
               <Link href="/" className="wordmark"><span className="mark" aria-hidden="true" />exctra</Link>
               <span className="nav-links">
-                <Link href="/" className="hide-sm">Search</Link>
+                <Link href="/explore" className="hide-sm">Explore</Link>
                 <Link href="/chances">Chances</Link>
                 <Link href="/about" className="hide-sm">How grades work</Link>
                 <NavAccount />

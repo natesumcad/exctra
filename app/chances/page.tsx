@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { COLLEGES, STATES } from "@/lib/colleges";
-import { GRADE_POINTS, MAJORS, findBySlug, type Major } from "@/lib/data";
-import { STATUS_LABEL, useAccount, type Academics } from "@/lib/auth";
-import {
-  AP_EXAMS, AWARD_LEVELS, actToSat, activityPoints, effectLabel, estimate,
-  type Applicant, type AwardLevel, type Band,
-} from "@/lib/chances";
+import { MAJORS, findBySlug, type Major } from "@/lib/data";
+import { useAccount } from "@/lib/auth";
+import { AWARD_LEVELS, actToSat, activityPoints, effectLabel, estimate, type Applicant, type Band } from "@/lib/chances";
+import { unweightedGpa } from "@/lib/grades";
 
 const BANDS: Band[] = ["Likely", "Target", "Reach", "Far reach"];
 type SortKey = "chance" | "selective" | "name";
@@ -20,42 +18,36 @@ const num = (s: string, lo: number, hi: number) => {
 const pct = (p: number) => (p < 0.01 ? "<1%" : `${Math.round(p * 100)}%`);
 
 export default function ChancesPage() {
-  const { data, saveAcademics, setStatus } = useAccount();
-  const ac = data.academics;
-  const set = (patch: Partial<Academics>) => saveAcademics({ ...ac, ...patch });
-  const [apExam, setApExam] = useState<string>(AP_EXAMS[0]);
-  const [apScore, setApScore] = useState(5);
+  const { data, updateScores } = useAccount();
+  const { profile: p, scores, courses } = data;
   const [q, setQ] = useState("");
   const [state, setState] = useState("");
   const [band, setBand] = useState<Band | "">("");
   const [sort, setSort] = useState<SortKey>("chance");
+  const [otherMajor, setOtherMajor] = useState(false);
 
-  const major = ac.major || data.profile.majors[0] || "";
-  const courseGpa = data.courses.length
-    ? data.courses.reduce((t, c) => t + Math.min(4, GRADE_POINTS[c.grade]), 0) / data.courses.length
-    : null;
-  const apCourses = data.courses.filter((c) => c.level === "AP / IB").length;
-  const saved = data.saved.map((s) => ({ ...s, ec: findBySlug(s.slug) })).filter((s) => s.ec);
-  const joined = saved.filter((s) => s.status === "joined").map((s) => s.ec!);
-
-  const gpa = num(ac.gpa, 0, 4.0);
-  const sat = num(ac.sat, 400, 1600);
-  const act = num(ac.act, 1, 36);
-  const satBadStep = sat !== null && sat % 10 !== 0;
+  const major: Major | "" = scores.major || p.majors.find((m) => m !== "Undecided") || "";
+  const autoGpa = unweightedGpa(courses);
+  const gpa = num(scores.gpa, 0, 4) ?? autoGpa;
+  const sat = num(scores.sat, 400, 1600);
+  const act = num(scores.act, 1, 36);
   const best = Math.max(sat ?? 0, act !== null ? actToSat(act) : 0) || null;
+  const apCourses = courses.filter((c) => c.level === "AP / IB");
+  const apScores = apCourses.map((c) => c.apScore).filter((x): x is number => x !== null);
+  const joined = p.activities.map(findBySlug).filter((e) => e !== undefined);
 
   const applicant: Applicant = {
-    major: major as Major | "",
+    major,
     gpa,
     sat: best,
-    apCount: Math.max(ac.aps.length, apCourses),
-    apAvg: ac.aps.length ? ac.aps.reduce((t, x) => t + x.score, 0) / ac.aps.length : null,
+    apCount: apCourses.length,
+    apAvg: apScores.length ? apScores.reduce((t, x) => t + x, 0) / apScores.length : null,
     activities: joined,
-    award: ac.award,
+    award: p.award,
   };
+  const key = JSON.stringify({ ...applicant, activities: joined.map((x) => x.slug) });
+  const quickMajors = [...new Set([...p.majors.filter((m) => m !== "Undecided"), ...(major ? [major] : [])])];
 
-  const key = JSON.stringify({ ...applicant, activities: applicant.activities.map((x) => x.slug) });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rows = useMemo(() => COLLEGES.map((c) => ({ c, e: estimate(c, applicant) })), [key]);
 
   const counts = Object.fromEntries(BANDS.map((b) => [b, rows.filter((r) => r.e?.band === b).length])) as Record<Band, number>;
@@ -84,108 +76,55 @@ export default function ChancesPage() {
       <div className="wrap-inner chances-layout">
         <aside className="chances-inputs">
           <section className="panel-section">
-            <div className="section-label">Intended major</div>
-            <select className="full" value={major} onChange={(e) => set({ major: e.target.value as Major })} aria-label="Intended major">
-              <option value="">Not sure yet</option>
-              {MAJORS.filter((m) => m !== "Undecided").map((m) => <option key={m}>{m}</option>)}
-            </select>
+            <div className="section-label">Applying as</div>
+            <div className="chip-row">
+              {quickMajors.map((m) => (
+                <button key={m} type="button" className="chip" aria-pressed={major === m} onClick={() => updateScores({ major: m })}>{m}</button>
+              ))}
+              <button type="button" className="chip" aria-pressed={otherMajor} onClick={() => setOtherMajor(!otherMajor)}>
+                {quickMajors.length ? "Other major" : "Choose a major"}
+              </button>
+            </div>
+            {otherMajor && (
+              <div className="chip-row top-gap">
+                {MAJORS.filter((m) => m !== "Undecided" && !quickMajors.includes(m)).map((m) => (
+                  <button key={m} type="button" className="chip" onClick={() => { updateScores({ major: m }); setOtherMajor(false); }}>{m}</button>
+                ))}
+              </div>
+            )}
             <p className="hint">Computer science, engineering, nursing, and business are harder to get into at some schools.</p>
           </section>
 
           <section className="panel-section">
-            <div className="section-label">Grades</div>
-            <label className="field">
-              <span>Unweighted GPA <span className="muted">(4.0 scale)</span></span>
-              <input inputMode="decimal" placeholder="e.g. 3.85" value={ac.gpa} onChange={(e) => set({ gpa: e.target.value })} />
-            </label>
-            {ac.gpa && gpa === null && <p className="error">Enter a GPA between 0 and 4.0.</p>}
-            {courseGpa !== null && (
-              <button type="button" className="link small" onClick={() => set({ gpa: courseGpa.toFixed(2) })}>
-                Use my logged courses ({courseGpa.toFixed(2)})
-              </button>
-            )}
-          </section>
-
-          <section className="panel-section">
-            <div className="section-label">Test scores <span className="muted">optional</span></div>
-            <div className="two-col tight">
-              <label className="field">
-                <span>SAT</span>
-                <input inputMode="numeric" placeholder="400-1600" value={ac.sat} onChange={(e) => set({ sat: e.target.value })} />
-              </label>
-              <label className="field">
-                <span>ACT</span>
-                <input inputMode="numeric" placeholder="1-36" value={ac.act} onChange={(e) => set({ act: e.target.value })} />
-              </label>
+            <div className="section-head">
+              <div className="section-label">Your record</div>
+              <Link href="/setup?step=4">Edit</Link>
             </div>
-            {((ac.sat && sat === null) || satBadStep) && <p className="error">SAT scores run from 400 to 1600 in steps of 10.</p>}
-            {ac.act && act === null && <p className="error">ACT scores run from 1 to 36.</p>}
-            <p className="hint">We use whichever is stronger. Leave both blank to see test-optional estimates.</p>
-          </section>
-
-          <section className="panel-section">
-            <div className="section-label">AP exams</div>
-            <div className="ap-add">
-              <select value={apExam} onChange={(e) => setApExam(e.target.value)} aria-label="AP exam">
-                {AP_EXAMS.map((x) => <option key={x}>{x}</option>)}
-              </select>
-              <select value={apScore} onChange={(e) => setApScore(Number(e.target.value))} aria-label="Score">
-                {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
-              <button type="button" className="btn-ghost"
-                onClick={() => set({ aps: [...ac.aps, { id: `${Date.now()}`, exam: apExam, score: apScore }] })}>Add</button>
+            <dl className="kv record">
+              <dt>GPA</dt>
+              <dd>{gpa !== null ? gpa.toFixed(2) : <Link href="/setup?step=4">Add classes or a GPA</Link>}{gpa !== null && !num(scores.gpa, 0, 4) && <span className="muted"> from classes</span>}</dd>
+              <dt>Tests</dt>
+              <dd>{[sat && `SAT ${sat}`, act && `ACT ${act}`].filter(Boolean).join(" · ") || <span className="muted">None (test-optional)</span>}</dd>
+              <dt>AP / IB</dt>
+              <dd>{apCourses.length} class{apCourses.length === 1 ? "" : "es"}{apScores.length > 0 && <span className="muted"> · {apScores.length} exam{apScores.length === 1 ? "" : "s"} avg {applicant.apAvg!.toFixed(1)}</span>}</dd>
+              <dt>Activities</dt>
+              <dd>{joined.length} done · strength {activityPoints(joined, major, p.award).toFixed(1)}</dd>
+              <dt>Top award</dt>
+              <dd>{AWARD_LEVELS[p.award].label}</dd>
+            </dl>
+            <div className="row-gap">
+              <Link href="/setup?step=5" className="btn-ghost">Edit scores</Link>
+              <Link href="/setup?step=6" className="btn-ghost">Edit activities</Link>
             </div>
-            {ac.aps.length > 0 && (
-              <ul className="mini-list">
-                {ac.aps.map((x) => (
-                  <li key={x.id}>
-                    <span>{x.exam}</span>
-                    <span className="row-gap">
-                      <span className="mono">{x.score}</span>
-                      <button type="button" className="link small" onClick={() => set({ aps: ac.aps.filter((y) => y.id !== x.id) })}>Remove</button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <p className="hint">
-              {apCourses > 0 ? `${apCourses} AP/IB course${apCourses === 1 ? "" : "s"} from your Strengths tab also count toward rigor. ` : ""}
-              Add exams you&apos;ve taken; courses without scores yet can go on the <Link href="/account/strengths">Strengths</Link> tab.
-            </p>
-          </section>
-
-          <section className="panel-section">
-            <div className="section-label">Activities you&apos;ve done</div>
-            {saved.length === 0 ? (
-              <p className="hint">Save opportunities from <Link href="/">search</Link>, then check the ones you&apos;ve actually done here.</p>
-            ) : (
-              <>
-                <p className="hint">Check the ones you&apos;ve done. Only checked activities count.</p>
-                {saved.map((s) => (
-                  <label key={s.slug} className="check">
-                    <input type="checkbox" checked={s.status === "joined"}
-                      onChange={() => setStatus(s.slug, s.status === "joined" ? "considering" : "joined")} />
-                    <span>{s.ec!.name}</span>
-                    <span className="count mono">{s.status === "joined" ? STATUS_LABEL.joined : ""}</span>
-                  </label>
-                ))}
-              </>
-            )}
-            <label className="field top-gap">
-              <span>Highest award or recognition</span>
-              <select value={ac.award} onChange={(e) => set({ award: e.target.value as AwardLevel })}>
-                {Object.entries(AWARD_LEVELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </label>
-            <p className="hint mono">Activity strength {activityPoints(joined, applicant.major, ac.award).toFixed(1)}</p>
           </section>
         </aside>
 
         <section className="chances-results" aria-live="polite">
           {gpa === null ? (
             <div className="empty">
-              <p className="empty-title">Enter your GPA to see estimates.</p>
+              <p className="empty-title">Add your classes or GPA to see estimates.</p>
               <p>Test scores, AP exams, and activities are optional but make the estimate more specific.</p>
+              <Link href="/setup?step=4" className="btn">Add classes</Link>
             </div>
           ) : (
             <>

@@ -84,7 +84,7 @@ export default function SettingsPage() {
 
       <section className="panel-section danger">
         <div className="section-label">Reset</div>
-        <p className="muted">Delete your profile, grades, saved activities, and photo from this browser.</p>
+        <p className="muted">Delete your profile, classes, scores, activities, and photo from this browser.</p>
         <button type="button" className="btn-ghost danger-btn"
           onClick={() => { if (window.confirm("Delete all of your account data on this device?")) { clearData(); setStatus(null); } }}>
           Delete my data

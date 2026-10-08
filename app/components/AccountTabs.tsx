@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   ["/account", "Overview"],
-  ["/account/profile", "Profile"],
-  ["/account/strengths", "Strengths"],
+  ["/setup", "Edit profile"],
+  ["/chances", "Chances"],
   ["/account/settings", "Settings"],
 ] as const;
 
