@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ECS, HOURS, MAJORS, findBySlug, slugify } from "@/lib/data";
+import { ECS, HOURS, MAJORS, findBySlug } from "@/lib/data";
 import BackLink from "@/app/components/BackLink";
 import SaveButton from "@/app/components/SaveButton";
 
@@ -10,7 +10,7 @@ const MAJOR_INDEX = Object.fromEntries(MAJORS.map((m, i) => [m, i])) as Record<s
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return ECS.map((ec) => ({ slug: slugify(ec.name) }));
+  return ECS.map((ec) => ({ slug: ec.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,43 +21,45 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ActivityPage({ params }: Props) {
   const ec = findBySlug((await params).slug);
   if (!ec) notFound();
-  const related = ECS.filter((x) => x.category === ec.category && x !== ec).slice(0, 4);
+  const overlap = (x: typeof ec) => x.majors.filter((m) => ec.majors.includes(m)).length;
+  const related = ECS.filter((x) => x !== ec && x.category === ec.category)
+    .sort((a, b) => Number(b.curated) - Number(a.curated) || overlap(b) - overlap(a))
+    .slice(0, 6);
 
   return (
     <main>
       <div className="page-head">
         <div className="wrap-inner">
-          <p className="crumb"><BackLink /> / {ec.category}</p>
+          <p className="eyebrow"><BackLink /> / {ec.category} / {ec.type}</p>
           <div className="head-row">
             <div>
               <h1>{ec.name}</h1>
               <p className="lede">{ec.description}</p>
             </div>
-            <SaveButton slug={slugify(ec.name)} name={ec.name} />
+            <SaveButton slug={ec.slug} name={ec.name} />
           </div>
         </div>
       </div>
 
       <div className="wrap-inner profile">
         <div className="profile-main">
-          <section className="block">
-            <h2>Quick facts</h2>
-            <dl className="facts-grid">
-              <div><dt>Type</dt><dd>{ec.category}</dd></div>
-              <div><dt>Typical time</dt><dd>{HOURS[ec.commitment]}</dd></div>
-              <div><dt>Good for</dt><dd>{ec.majors.length} majors</dd></div>
-            </dl>
-          </section>
+          <dl className="facts-grid">
+            <div><dt>Type</dt><dd>{ec.type}</dd></div>
+            <div><dt>Field</dt><dd>{ec.category}</dd></div>
+            <div><dt>Typical time</dt><dd>{HOURS[ec.commitment]}</dd></div>
+            <div><dt>Format</dt><dd>{ec.format}</dd></div>
+          </dl>
 
           <section className="block">
             <h2>How to get started</h2>
             <p>{ec.tip}</p>
+            {ec.curated && <p className="muted small-print">Dates, costs, and eligibility change. Confirm details with the organizer.</p>}
           </section>
 
           <section className="block">
             <h2>Majors it supports</h2>
             <ul className="tags">
-              {ec.majors.map((m) => <li key={m}><Link href={`/?m=${encodeURIComponent(String(MAJOR_INDEX[m]))}`}>{m}</Link></li>)}
+              {ec.majors.map((m) => <li key={m}><Link href={`/?m=${MAJOR_INDEX[m]}`}>{m}</Link></li>)}
             </ul>
           </section>
 
@@ -65,16 +67,21 @@ export default async function ActivityPage({ params }: Props) {
             <h2>Strengths it uses</h2>
             <ul className="tags">{ec.strengths.map((s) => <li key={s}>{s}</li>)}</ul>
           </section>
+
+          <section className="block">
+            <h2>Related school subjects</h2>
+            <ul className="tags">{ec.subjects.map((s) => <li key={s}>{s}</li>)}</ul>
+          </section>
         </div>
 
         {related.length > 0 && (
-          <aside className="profile-side">
-            <h2>More in {ec.category}</h2>
+          <aside className="side-card">
+            <div className="section-label">More in {ec.category}</div>
             <ul className="related">
               {related.map((r) => (
-                <li key={r.name}>
-                  <Link href={`/activities/${slugify(r.name)}`}>{r.name}</Link>
-                  <span className="muted">{HOURS[r.commitment]}</span>
+                <li key={r.slug}>
+                  <Link href={`/activities/${r.slug}`}>{r.name}</Link>
+                  <span className="muted">{r.type} · {HOURS[r.commitment]}</span>
                 </li>
               ))}
             </ul>

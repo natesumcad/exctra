@@ -9,8 +9,7 @@ export default function About() {
     <main className="wrap prose">
       <h1>How match grades work</h1>
       <p>
-        Exctra keeps a hand-written list of {ECS.length} extracurriculars. Each one is tagged with the
-        majors it supports, the strengths it uses, and roughly how many hours a week it takes.
+        Exctra lists {ECS.length.toLocaleString()} opportunities: real named programs plus specific project, job, club, and volunteering ideas. Each one is tagged with the majors it supports, the strengths it uses, the school subjects it draws on, and roughly how many hours a week it takes.
         As you check boxes, every activity gets a score:
       </p>
       <table className="score-table">
@@ -18,6 +17,7 @@ export default function About() {
           <tr><td>Fits at least one of your majors</td><td>+5</td></tr>
           <tr><td>Each additional major it fits</td><td>+1</td></tr>
           <tr><td>Each strength it uses that you checked</td><td>+2</td></tr>
+          <tr><td>Strong grades in its subjects (logged-in students)</td><td>up to +3</td></tr>
           <tr><td>Each time level above what you picked</td><td>−2</td></tr>
         </tbody>
       </table>

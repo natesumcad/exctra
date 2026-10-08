@@ -7,6 +7,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { Commitment, Major, Strength } from "./data";
+import type { CourseGrade } from "./grades";
 
 export const DEMO_USERS: Record<string, string> = { "1": "1" };
 
@@ -34,11 +35,16 @@ export interface SavedItem {
 interface AccountData {
   profile: Profile;
   saved: SavedItem[];
+  courses: CourseGrade[];
+  /** Profile photo as a small JPEG data URL. */
+  avatar: string | null;
 }
 
 const EMPTY_DATA: AccountData = {
   profile: { name: "", grade: "", majors: [], strengths: [], time: "any" },
   saved: [],
+  courses: [],
+  avatar: null,
 };
 
 const SESSION_KEY = "exctra:session";
@@ -52,11 +58,19 @@ function read<T>(key: string): T | null {
     return null;
   }
 }
-function write(key: string, value: unknown) {
+function write(key: string, value: unknown): boolean {
   try {
     if (value === null) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function load(u: string): AccountData {
+  const d = read<Partial<AccountData>>(dataKey(u)) ?? {};
+  return { ...EMPTY_DATA, ...d, profile: { ...EMPTY_DATA.profile, ...d.profile } };
 }
 
 interface AccountContext {
@@ -66,6 +80,9 @@ interface AccountContext {
   login: (username: string, password: string) => boolean;
   logout: () => void;
   saveProfile: (p: Profile) => void;
+  saveCourses: (c: CourseGrade[]) => void;
+  setAvatar: (dataUrl: string | null) => boolean;
+  clearData: () => void;
   isSaved: (slug: string) => boolean;
   toggleSaved: (slug: string) => void;
   setStatus: (slug: string, status: Status) => void;
@@ -82,7 +99,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     const u = read<string>(SESSION_KEY);
     if (u && u in DEMO_USERS) {
       setUser(u);
-      setData({ ...EMPTY_DATA, ...read<AccountData>(dataKey(u)) });
+      setData(load(u));
     }
     setReady(true);
   }, []);
@@ -106,7 +123,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       if (DEMO_USERS[u] === undefined || DEMO_USERS[u] !== password) return false;
       write(SESSION_KEY, u);
       setUser(u);
-      setData({ ...EMPTY_DATA, ...read<AccountData>(dataKey(u)) });
+      setData(load(u));
       return true;
     },
     logout: () => {
@@ -115,6 +132,18 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setData(EMPTY_DATA);
     },
     saveProfile: (profile) => update((d) => ({ ...d, profile })),
+    saveCourses: (courses) => update((d) => ({ ...d, courses })),
+    setAvatar: (avatar) => {
+      if (!user) return false;
+      const next = { ...data, avatar };
+      if (!write(dataKey(user), next)) return false; // storage full
+      setData(next);
+      return true;
+    },
+    clearData: () => {
+      if (user) write(dataKey(user), null);
+      setData(EMPTY_DATA);
+    },
     isSaved: (slug) => data.saved.some((s) => s.slug === slug),
     toggleSaved: (slug) =>
       update((d) => ({

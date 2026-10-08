@@ -1,0 +1,633 @@
+import type { Row } from "../taxonomy";
+
+/*
+ * Specific activity ideas built from lists. Each list entry is a real, distinct thing a
+ * student can do; the templates only supply the shared wording.
+ * Entry shape: [label, category, majors, strengths, subjects, extra?]
+ */
+type Seed = [string, string, string, string, string, string?];
+const row = (...f: string[]) => f.join("|");
+const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
+
+/* School clubs: each one yields "join" and "start" variants. */
+const CLUBS: Seed[] = [
+  ["Coding", "stem", "cs,ds", "code,team", "c"],
+  ["Artificial Intelligence", "stem", "cs,ds,phil", "code,res", "c,m"],
+  ["Cybersecurity", "stem", "cs,eng", "code,comp", "c"],
+  ["Game Development", "stem", "cs,art,film", "code,create", "c,a"],
+  ["Web Design", "stem", "cs,art", "code,create", "c,a"],
+  ["Data Science", "stem", "ds,cs,math", "code,math,res", "c,m"],
+  ["Math", "stem", "math,cs", "math,comp", "m"],
+  ["Physics", "stem", "chem,eng", "math,res", "p"],
+  ["Chemistry", "stem", "chem,bio,nur", "res,build", "ch"],
+  ["Astronomy", "stem", "chem,math", "res", "p"],
+  ["Rocketry", "stem", "eng,chem", "build,team", "p"],
+  ["Drone", "stem", "eng,cs", "build,code", "p,c"],
+  ["Electronics", "stem", "eng,cs", "build", "p"],
+  ["3D Printing", "stem", "eng,art,arch", "build,create", "p,a"],
+  ["Women in STEM", "stem", "eng,cs,bio,math", "lead,help", "m,c"],
+  ["Biology", "stem", "bio,nur,env", "res", "b"],
+  ["Neuroscience", "health", "bio,psy,nur", "res", "b,ps"],
+  ["Pre-Med", "health", "bio,nur", "res,help", "b,ch"],
+  ["Psychology", "health", "psy,edu", "res,help", "ps"],
+  ["Public Health", "health", "nur,bio,law", "res,help", "he,b"],
+  ["Mental Health Awareness", "health", "psy,nur", "help,speak", "ps,he"],
+  ["Nutrition and Cooking", "health", "nur,kin", "create,help", "he"],
+  ["Entrepreneurship", "biz", "bus", "create,lead", "bu"],
+  ["Personal Finance", "biz", "bus,math", "math,org", "ec,m"],
+  ["Economics", "biz", "bus,law", "res,math", "ec"],
+  ["Marketing", "biz", "bus,art,jour", "create,speak", "bu"],
+  ["Real Estate", "biz", "bus,arch", "math,speak", "bu"],
+  ["Politics", "civ", "law,ir", "speak,res", "g"],
+  ["Young Democrats or Young Republicans", "civ", "law", "speak,org", "g"],
+  ["Civil Rights and Social Justice", "civ", "law,hist", "speak,help", "g,h"],
+  ["Law and Pre-Law", "civ", "law", "speak,res", "g"],
+  ["International Affairs", "civ", "ir,law", "res,speak", "g,h"],
+  ["History", "hum", "hist", "res,write", "h"],
+  ["Philosophy", "hum", "phil", "write,speak", "e,h"],
+  ["Book", "hum", "wri,edu", "write", "e"],
+  ["Spanish", "hum", "lang,ir", "speak", "l"],
+  ["French", "hum", "lang,ir", "speak", "l"],
+  ["Mandarin and Chinese Culture", "hum", "lang,ir", "speak", "l"],
+  ["Japanese Culture", "hum", "lang,art", "create", "l"],
+  ["Korean Culture", "hum", "lang,mus", "create", "l"],
+  ["Sign Language", "hum", "lang,edu", "help,speak", "l"],
+  ["Creative Writing", "media", "wri", "write,create", "e"],
+  ["Poetry and Spoken Word", "media", "wri,mus", "write,speak", "e"],
+  ["Photography", "arts", "art,jour,film", "create", "a"],
+  ["Film", "arts", "film,jour", "create,team", "a"],
+  ["Anime and Comics Art", "arts", "art", "create", "a"],
+  ["Fashion Design", "arts", "art,bus", "create,build", "a"],
+  ["Architecture and Design", "arts", "arch,art,eng", "create,build", "a,m"],
+  ["Ceramics", "arts", "art", "create,build", "a"],
+  ["A Cappella", "arts", "mus", "create,team", "mu"],
+  ["Jazz Band", "arts", "mus", "create,team", "mu"],
+  ["Improv Comedy", "arts", "mus,film", "speak,create", "t"],
+  ["Chess", "hum", "math,cs", "math,comp", "m"],
+  ["Esports", "ath", "cs,bus", "team,comp", "c"],
+  ["Hiking and Outdoors", "ath", "env,kin", "team", "he,es"],
+  ["Gardening", "env", "env,ag", "build", "es,b"],
+  ["Sustainability", "env", "env,law", "lead,org", "es"],
+  ["Animal Rights and Welfare", "env", "ag,bio", "help", "b"],
+  ["Volunteer Service", "svc", "und,edu", "help,org", "he"],
+  ["Cultural Heritage", "hum", "hist,lang", "lead,create", "h,l"],
+];
+
+/* Volunteering: [place, category, majors, strengths, subjects] */
+const PLACES: Seed[] = [
+  ["an animal shelter", "env", "ag,bio", "help", "b"],
+  ["a wildlife rehabilitation center", "env", "ag,bio,env", "help,build", "b,es"],
+  ["a veterinary clinic", "health", "ag,bio", "help", "b"],
+  ["a zoo or aquarium", "env", "bio,env,edu", "help,speak", "b,es"],
+  ["a nature center", "env", "env,edu", "speak,help", "es"],
+  ["a state or national park", "env", "env", "build,team", "es"],
+  ["a botanical garden", "env", "env,ag,bio", "build", "b,es"],
+  ["a community garden", "env", "env,ag", "build,team", "es"],
+  ["a farm or food co-op", "env", "ag,env", "build", "es"],
+  ["a food bank", "svc", "und,bus", "org,help", "he"],
+  ["a soup kitchen", "svc", "und", "help,team", "he"],
+  ["a homeless shelter", "svc", "psy,law", "help", "he"],
+  ["a refugee resettlement agency", "svc", "ir,lang,law", "help", "l,g"],
+  ["an ESL program for adults", "svc", "lang,edu", "help,speak", "l,e"],
+  ["a public library", "svc", "wri,edu", "org,help", "e"],
+  ["a literacy nonprofit", "svc", "edu,wri", "help", "e"],
+  ["an after-school program", "svc", "edu,psy", "help,lead", "ps"],
+  ["a Boys and Girls Club", "svc", "edu,kin", "help,lead", "he"],
+  ["a children's hospital", "health", "nur,bio,psy", "help", "b,he"],
+  ["a nursing home", "health", "nur,psy", "help", "he,ps"],
+  ["a hospice", "health", "nur,psy", "help", "he,ps"],
+  ["a free clinic", "health", "nur,bio", "help,org", "b,he"],
+  ["a blood bank", "health", "nur,bio", "org,help", "b"],
+  ["a physical therapy clinic", "health", "kin,nur", "help", "he,b"],
+  ["a disability services nonprofit", "svc", "edu,psy,nur", "help", "ps"],
+  ["a special education classroom", "svc", "edu,psy", "help", "ps"],
+  ["a senior center", "svc", "nur,psy", "help,speak", "he"],
+  ["a museum", "hum", "hist,art,edu", "speak,res", "h,a"],
+  ["a historical society", "hum", "hist", "res,org", "h"],
+  ["an art center", "arts", "art,edu", "create,help", "a"],
+  ["a community theater", "arts", "mus,film", "create,team", "t"],
+  ["a youth orchestra or music school", "arts", "mus,edu", "create,help", "mu"],
+  ["a local radio station", "media", "jour,mus", "speak,create", "e"],
+  ["a local newspaper", "media", "jour,wri", "write,res", "e"],
+  ["a science museum", "stem", "bio,chem,edu,eng", "speak,help", "b,p"],
+  ["a makerspace", "stem", "eng,art", "build,help", "p"],
+  ["a computer refurbishing nonprofit", "stem", "cs,eng", "build,help", "c"],
+  ["a coding camp for kids", "stem", "cs,edu", "code,help", "c"],
+  ["a robotics team for younger students", "stem", "eng,edu", "build,lead", "p"],
+  ["a legal aid organization", "civ", "law", "org,res", "g"],
+  ["a voter registration drive", "civ", "law", "org,speak", "g"],
+  ["a city council office", "civ", "law", "org,write", "g"],
+  ["an immigrant rights organization", "civ", "law,ir,lang", "help,org", "g,l"],
+  ["a mentoring program", "svc", "edu,psy", "help,lead", "ps"],
+  ["a youth sports league", "ath", "kin,edu", "lead,team", "he"],
+  ["an adaptive sports program", "ath", "kin,nur", "help,team", "he"],
+  ["a summer reading program", "svc", "edu,wri", "help", "e"],
+  ["a tax preparation clinic (VITA)", "biz", "bus,math", "math,help", "ec,m"],
+  ["a small business association", "biz", "bus", "org", "bu"],
+  ["a habitat restoration site", "env", "env,bio", "build,team", "es"],
+  ["a beach or river cleanup", "env", "env", "team,org", "es"],
+  ["a recycling center", "env", "env,eng", "org", "es"],
+  ["a fire station youth program", "svc", "nur,law", "team,help", "he"],
+  ["a Red Cross chapter", "health", "nur,law", "help,team", "he"],
+  ["a religious or community center", "svc", "und", "help,org", "he"],
+  ["a cultural festival", "hum", "lang,hist,art", "org,create", "l,h"],
+  ["an election office", "civ", "law", "org", "g"],
+  ["a hospital gift shop or front desk", "health", "nur,bus", "org,help", "he"],
+  ["a dental clinic", "health", "bio,nur", "help", "b"],
+];
+
+/* Tutoring subjects x audiences. */
+const TUTOR_SUBJECTS: Seed[] = [
+  ["math", "stem", "math,edu", "math,help", "m"],
+  ["algebra", "stem", "math,edu", "math,help", "m"],
+  ["geometry", "stem", "math,edu", "math,help", "m"],
+  ["calculus", "stem", "math,eng", "math,help", "m"],
+  ["coding", "stem", "cs,edu", "code,help", "c"],
+  ["biology", "stem", "bio,edu", "help", "b"],
+  ["chemistry", "stem", "chem,edu", "help", "ch"],
+  ["physics", "stem", "chem,eng", "math,help", "p"],
+  ["reading", "svc", "edu,wri", "help", "e"],
+  ["essay writing", "media", "wri,edu", "write,help", "e"],
+  ["SAT and ACT prep", "svc", "edu,math", "math,help", "m,e"],
+  ["Spanish", "hum", "lang,edu", "speak,help", "l"],
+  ["English as a second language", "hum", "lang,edu", "speak,help", "l,e"],
+  ["history", "hum", "hist,edu", "help", "h"],
+  ["music lessons", "arts", "mus,edu", "create,help", "mu"],
+  ["art lessons", "arts", "art,edu", "create,help", "a"],
+  ["chess", "hum", "math,edu", "math,help", "m"],
+];
+const AUDIENCES = [
+  ["elementary students", "Patient, simple explanations matter more than advanced knowledge."],
+  ["middle school students", "Keep a short log of each session to show growth over time."],
+  ["classmates through peer tutoring", "Your school's tutoring center or NHS chapter can match you."],
+];
+
+/* Jobs and internships: [workplace, category, majors, strengths, subjects] */
+const JOBS: Seed[] = [
+  ["a restaurant or cafe", "biz", "und,bus", "team,org", "bu"],
+  ["a grocery store", "biz", "und,bus", "org,team", "bu"],
+  ["a retail store", "biz", "bus", "speak,team", "bu"],
+  ["a bank", "biz", "bus,math", "math,org", "ec,m"],
+  ["an accounting office", "biz", "bus,math", "math,org", "ec,m"],
+  ["a real estate office", "biz", "bus,arch", "org,speak", "bu"],
+  ["a marketing agency", "biz", "bus,art,jour", "create,write", "bu,a"],
+  ["a local startup", "biz", "bus,cs,eng", "create,team", "bu,c"],
+  ["a tech company", "stem", "cs,ds,eng", "code,team", "c"],
+  ["an IT help desk", "stem", "cs", "code,help", "c"],
+  ["a computer repair shop", "stem", "cs,eng", "build,help", "c,p"],
+  ["an engineering firm", "stem", "eng,arch", "build,math", "p,m"],
+  ["an architecture firm", "arts", "arch,art", "create,build", "a,m"],
+  ["a construction company", "stem", "eng,arch", "build,team", "p"],
+  ["an auto repair shop", "stem", "eng", "build", "p"],
+  ["a research lab", "stem", "bio,chem,psy", "res", "b,ch"],
+  ["a pharmacy", "health", "nur,bio,chem", "help,org", "ch,b"],
+  ["a doctor's office", "health", "nur,bio", "help,org", "b,he"],
+  ["a dental office", "health", "bio,nur", "help,org", "b"],
+  ["a physical therapy office", "health", "kin,nur", "help", "he,b"],
+  ["a veterinary hospital", "health", "ag,bio", "help", "b"],
+  ["a gym or fitness center", "ath", "kin,bus", "help,team", "he"],
+  ["a swim club as a lifeguard", "ath", "kin,nur", "help", "he"],
+  ["a sports camp", "ath", "kin,edu", "lead,team", "he"],
+  ["a summer day camp", "svc", "edu,psy", "lead,help", "ps"],
+  ["a tutoring center", "svc", "edu,math", "help", "m,e"],
+  ["a daycare or preschool", "svc", "edu,psy", "help", "ps"],
+  ["a law office", "civ", "law", "org,write", "g"],
+  ["a government office", "civ", "law", "org,write", "g"],
+  ["a political campaign", "civ", "law", "org,speak", "g"],
+  ["a nonprofit", "svc", "und,law", "org,help", "g"],
+  ["a newspaper or magazine", "media", "jour,wri", "write,res", "e"],
+  ["a radio or TV station", "media", "jour,film", "create,team", "e"],
+  ["a video production company", "arts", "film,art", "create,team", "a"],
+  ["a photography studio", "arts", "art,film", "create", "a"],
+  ["a graphic design studio", "arts", "art", "create", "a"],
+  ["a music store or studio", "arts", "mus", "create,help", "mu"],
+  ["a theater box office or crew", "arts", "mus,film", "team,org", "t"],
+  ["a museum", "hum", "hist,art", "speak,res", "h"],
+  ["a library", "hum", "wri,edu", "org", "e"],
+  ["a bookstore", "media", "wri", "org,speak", "e"],
+  ["a farm", "env", "ag,env", "build", "es,b"],
+  ["a landscaping company", "env", "env,ag,arch", "build", "es"],
+  ["a plant nursery", "env", "ag,env", "build", "b"],
+  ["an environmental nonprofit", "env", "env,law", "res,org", "es"],
+  ["a hotel", "biz", "bus,lang", "help,org", "bu"],
+  ["a travel or tour company", "hum", "ir,lang,bus", "speak,help", "l"],
+  ["a translation service", "hum", "lang", "write", "l"],
+  ["a social media team", "media", "jour,bus,art", "create,write", "e,bu"],
+  ["a family business", "biz", "bus", "org,lead", "bu"],
+];
+
+/* Independent projects: [project, category, majors, strengths, subjects, commitment] */
+const PROJECTS: Seed[] = [
+  ["Build a mobile app that solves a problem at your school", "stem", "cs,bus", "code,create", "c", "H"],
+  ["Build a website for a local nonprofit", "stem", "cs,art", "code,help", "c,a", "M"],
+  ["Contribute to an open source project on GitHub", "stem", "cs,ds", "code,team", "c", "M"],
+  ["Train a machine learning model on a public dataset", "stem", "ds,cs,math", "code,math,res", "c,m", "M"],
+  ["Build a Discord or Slack bot", "stem", "cs", "code,create", "c", "L"],
+  ["Make and publish a video game", "stem", "cs,art,mus", "code,create", "c,a", "H"],
+  ["Build a browser extension", "stem", "cs", "code", "c", "L"],
+  ["Analyze your school's data and present findings", "stem", "ds,math,law", "math,res,speak", "m,c", "M"],
+  ["Build a weather station with a microcontroller", "stem", "eng,env,cs", "build,code", "p,es", "M"],
+  ["Design and 3D print assistive devices", "stem", "eng,nur", "build,help", "p", "M"],
+  ["Build a solar-powered device", "stem", "eng,env", "build", "p,es", "M"],
+  ["Restore and document an old bike, car, or engine", "stem", "eng", "build", "p", "M"],
+  ["Build an electric skateboard or e-bike", "stem", "eng", "build,math", "p", "H"],
+  ["Design a tiny house or room in CAD", "arts", "arch,eng", "create,build", "a,m", "M"],
+  ["Build a telescope and log observations", "stem", "chem,math", "build,res", "p", "M"],
+  ["Run a home chemistry experiment series with safe materials", "stem", "chem", "res", "ch", "L"],
+  ["Monitor water quality in a local stream", "env", "env,bio,chem", "res", "es,ch", "M"],
+  ["Map tree canopy or heat islands in your town", "env", "env,ds", "res,code", "es,c", "M"],
+  ["Start a school composting program", "env", "env", "lead,org", "es", "M"],
+  ["Run an energy audit of your school", "env", "env,eng", "res,math", "es,p", "M"],
+  ["Plant a pollinator garden", "env", "env,ag", "build", "es,b", "L"],
+  ["Raise and show livestock", "env", "ag", "build,org", "b", "H"],
+  ["Breed and study plants for a science fair", "env", "ag,bio", "res", "b", "M"],
+  ["Run a survey study on teen sleep or screen time", "health", "psy,ds", "res,math", "ps,m", "M"],
+  ["Write a literature review on a medical topic", "health", "bio,nur", "res,write", "b", "M"],
+  ["Create a mental health resource guide for your school", "health", "psy,nur", "write,help", "ps", "L"],
+  ["Teach a free first aid workshop", "health", "nur", "speak,help", "he", "L"],
+  ["Track and analyze your own athletic training data", "ath", "kin,ds", "math,res", "he,m", "L"],
+  ["Coach a youth sports team", "ath", "kin,edu", "lead,help", "he", "M"],
+  ["Train for and finish a marathon or triathlon", "ath", "kin", "org", "he", "H"],
+  ["Start a small online store", "biz", "bus,art", "create,org", "bu", "M"],
+  ["Run a lawn care, pet sitting, or tutoring business", "biz", "bus", "org,lead", "bu", "M"],
+  ["Resell or flip items and track profit", "biz", "bus", "math,org", "bu,ec", "L"],
+  ["Write a business plan and pitch it to local investors", "biz", "bus", "write,speak", "bu", "M"],
+  ["Manage a paper trading portfolio and blog about it", "biz", "bus,math", "math,write", "ec", "L"],
+  ["Organize a financial literacy workshop", "biz", "bus,edu", "speak,help", "ec", "L"],
+  ["Write and self-publish a novel", "media", "wri", "write,create", "e", "H"],
+  ["Write and publish a poetry chapbook", "media", "wri", "write,create", "e", "M"],
+  ["Start a school or community newsletter", "media", "jour,wri", "write,org", "e", "M"],
+  ["Interview community elders and publish an oral history", "hum", "hist,jour", "res,write", "h,e", "M"],
+  ["Translate stories or documents for your community", "hum", "lang", "write,help", "l", "M"],
+  ["Create a language learning resource for your heritage language", "hum", "lang,edu", "create,help", "l", "M"],
+  ["Research and write your family's immigration history", "hum", "hist,lang", "res,write", "h", "L"],
+  ["Create a historical walking tour of your town", "hum", "hist,edu", "res,speak", "h", "M"],
+  ["Write a philosophy essay and submit it to contests", "hum", "phil", "write", "e", "L"],
+  ["Produce a documentary short", "arts", "film,jour", "create,res", "a,e", "H"],
+  ["Record and release an album or EP", "arts", "mus", "create", "mu", "H"],
+  ["Compose music for student films or games", "arts", "mus,film", "create", "mu", "M"],
+  ["Paint a community mural", "arts", "art", "create,lead", "a", "M"],
+  ["Design clothing and run a pop-up shop", "arts", "art,bus", "create,build", "a,bu", "M"],
+  ["Illustrate a children's book", "arts", "art,wri,edu", "create", "a,e", "M"],
+  ["Write and stage a one-act play", "arts", "mus,wri", "create,lead", "t,e", "H"],
+  ["Start a free summer camp for younger kids", "svc", "edu,psy", "lead,org", "ps", "H"],
+  ["Run a school supply drive", "svc", "und", "org,lead", "he", "L"],
+  ["Collect and donate used books to a shelter", "svc", "edu,wri", "org", "e", "L"],
+  ["Organize a coat or hygiene kit drive", "svc", "und", "org,help", "he", "L"],
+  ["Start a petition and meet with local officials", "civ", "law", "speak,lead", "g", "M"],
+  ["Write op-eds for your local paper", "civ", "law,jour", "write", "g,e", "L"],
+  ["Run a voter registration drive at school", "civ", "law", "org,speak", "g", "L"],
+  ["Build a nonpartisan guide to local elections", "civ", "law,jour", "res,write", "g", "M"],
+];
+
+/* Free online courses: [topic, category, majors, strengths, subjects] */
+const COURSES: Seed[] = [
+  ["introduction to computer science (e.g. Harvard CS50)", "stem", "cs,ds", "code", "c"],
+  ["Python programming", "stem", "cs,ds", "code", "c"],
+  ["web development", "stem", "cs,art", "code,create", "c"],
+  ["machine learning", "stem", "ds,cs,math", "code,math", "c,m"],
+  ["data analysis with spreadsheets", "stem", "ds,bus", "math", "m"],
+  ["statistics", "stem", "math,ds,psy", "math", "m"],
+  ["linear algebra", "stem", "math,cs,eng", "math", "m"],
+  ["multivariable calculus", "stem", "math,eng,chem", "math", "m"],
+  ["discrete math and proofs", "stem", "math,cs", "math", "m"],
+  ["cybersecurity fundamentals", "stem", "cs", "code", "c"],
+  ["electrical engineering basics", "stem", "eng", "math,build", "p"],
+  ["mechanical engineering basics", "stem", "eng", "math,build", "p"],
+  ["astronomy", "stem", "chem", "res", "p"],
+  ["organic chemistry", "stem", "chem,bio,nur", "res", "ch"],
+  ["genetics", "stem", "bio", "res", "b"],
+  ["neuroscience", "health", "bio,psy", "res", "b,ps"],
+  ["anatomy and physiology", "health", "nur,bio,kin", "res", "b,he"],
+  ["public health", "health", "nur,law", "res", "he"],
+  ["introduction to psychology", "health", "psy", "res", "ps"],
+  ["nutrition science", "health", "nur,kin", "res", "he"],
+  ["climate science", "env", "env", "res", "es"],
+  ["ecology", "env", "env,bio", "res", "es,b"],
+  ["sustainable agriculture", "env", "ag,env", "res", "es"],
+  ["microeconomics", "biz", "bus", "math", "ec"],
+  ["macroeconomics", "biz", "bus,law", "math", "ec"],
+  ["accounting", "biz", "bus", "math,org", "bu"],
+  ["entrepreneurship", "biz", "bus", "create", "bu"],
+  ["marketing", "biz", "bus", "create", "bu"],
+  ["personal finance", "biz", "bus", "math", "ec"],
+  ["constitutional law", "civ", "law", "res", "g"],
+  ["international relations", "civ", "ir,law", "res", "g,h"],
+  ["world history", "hum", "hist", "res", "h"],
+  ["philosophy and ethics", "hum", "phil", "write", "e"],
+  ["linguistics", "hum", "lang", "res", "l"],
+  ["a new language", "hum", "lang,ir", "speak", "l"],
+  ["creative writing", "media", "wri", "write,create", "e"],
+  ["journalism", "media", "jour", "write,res", "e"],
+  ["film studies", "arts", "film", "create", "a"],
+  ["music theory", "arts", "mus", "create", "mu"],
+  ["graphic design", "arts", "art", "create", "a"],
+  ["drawing and illustration", "arts", "art", "create", "a"],
+  ["architecture and design", "arts", "arch,art", "create", "a,m"],
+  ["education and learning science", "svc", "edu,psy", "help", "ps"],
+  ["sports science", "ath", "kin", "res", "he"],
+];
+
+/* Sports: [sport, extraMajors] */
+const SPORTS = [
+  "basketball", "soccer", "football", "baseball", "softball", "volleyball", "tennis", "golf",
+  "swimming and diving", "cross country", "track and field", "wrestling", "lacrosse", "field hockey",
+  "ice hockey", "water polo", "rowing", "gymnastics", "cheerleading", "badminton", "table tennis",
+  "fencing", "martial arts", "rock climbing", "skiing and snowboarding", "cycling", "ultimate frisbee",
+  "bowling", "equestrian", "sailing", "rugby", "archery", "figure skating", "surfing", "dance",
+];
+
+/* Content creation: media x topics */
+const MEDIA = [
+  ["podcast", "speak,create"],
+  ["YouTube channel", "create,speak"],
+  ["blog", "write,create"],
+  ["email newsletter", "write,org"],
+];
+const TOPICS: Seed[] = [
+  ["science explained simply", "stem", "bio,chem,edu", "", "b,p"],
+  ["coding tutorials", "stem", "cs", "code", "c"],
+  ["math problem walkthroughs", "stem", "math,edu", "math", "m"],
+  ["health myths and facts", "health", "nur,bio", "res", "he"],
+  ["mental health for teens", "health", "psy", "help", "ps"],
+  ["personal finance for teens", "biz", "bus", "math", "ec"],
+  ["local politics", "civ", "law,jour", "res", "g"],
+  ["history stories", "hum", "hist", "res", "h"],
+  ["book reviews", "media", "wri", "write", "e"],
+  ["film criticism", "arts", "film", "write", "a"],
+  ["music production", "arts", "mus", "create", "mu"],
+  ["climate and environment news", "env", "env,jour", "res", "es"],
+  ["language learning", "hum", "lang", "speak", "l"],
+  ["sports analysis", "ath", "kin,ds,jour", "math", "he"],
+  ["college and career advice for students", "svc", "edu", "help", "ps"],
+  ["art process and tutorials", "arts", "art", "create", "a"],
+  ["engineering builds", "stem", "eng", "build", "p"],
+  ["economics in the news", "biz", "bus,law", "res", "ec"],
+  ["philosophy for beginners", "hum", "phil", "write", "e"],
+  ["your cultural heritage", "hum", "lang,hist", "create", "l,h"],
+];
+
+/* Instruments and art forms for performance and competition. */
+const ARTS: Seed[] = [
+  ["piano", "arts", "mus", "create", "mu"],
+  ["violin or viola", "arts", "mus", "create", "mu"],
+  ["cello or bass", "arts", "mus", "create", "mu"],
+  ["guitar", "arts", "mus", "create", "mu"],
+  ["drums and percussion", "arts", "mus", "create,team", "mu"],
+  ["voice", "arts", "mus", "create,speak", "mu,t"],
+  ["flute or clarinet", "arts", "mus", "create", "mu"],
+  ["saxophone", "arts", "mus", "create", "mu"],
+  ["trumpet or brass", "arts", "mus", "create", "mu"],
+  ["composition", "arts", "mus", "create", "mu"],
+  ["digital music production", "arts", "mus,cs", "create,code", "mu,c"],
+  ["ballet", "arts", "mus,kin", "create", "t,he"],
+  ["hip hop dance", "arts", "mus,kin", "create,team", "t,he"],
+  ["painting", "arts", "art", "create", "a"],
+  ["sculpture", "arts", "art,arch", "create,build", "a"],
+  ["digital art", "arts", "art,cs", "create", "a"],
+  ["animation", "arts", "art,film", "create", "a"],
+  ["photography", "arts", "art,jour", "create", "a"],
+];
+
+/* Causes for fundraising and advocacy. */
+const CAUSES: Seed[] = [
+  ["childhood cancer research", "health", "bio,nur", "", "b"],
+  ["mental health services", "health", "psy", "", "ps"],
+  ["clean water access", "env", "env,eng,ir", "", "es"],
+  ["climate action", "env", "env,law", "", "es,g"],
+  ["animal welfare", "env", "ag,bio", "", "b"],
+  ["food insecurity", "svc", "und,law", "", "he"],
+  ["homelessness", "svc", "law,psy", "", "g"],
+  ["literacy", "svc", "edu,wri", "", "e"],
+  ["girls' education worldwide", "civ", "ir,edu", "", "g"],
+  ["refugee support", "civ", "ir,law,lang", "", "g,l"],
+  ["disability inclusion", "svc", "edu,nur", "", "ps"],
+  ["veterans' support", "svc", "law", "", "g"],
+  ["arts education funding", "arts", "art,mus,edu", "", "a,mu"],
+  ["STEM access for underrepresented students", "stem", "eng,cs,edu", "", "c"],
+  ["voting access", "civ", "law", "", "g"],
+  ["ocean conservation", "env", "env,bio", "", "es"],
+  ["rare disease awareness", "health", "bio,nur", "", "b"],
+  ["affordable housing", "civ", "law,arch,bus", "", "g,ec"],
+];
+
+/* Job shadowing: [profession, category, majors, strengths, subjects] */
+const SHADOW: Seed[] = [
+  ["a doctor", "health", "bio,nur", "help", "b"],
+  ["a surgeon", "health", "bio", "help", "b"],
+  ["a nurse", "health", "nur", "help", "b,he"],
+  ["a physical therapist", "health", "kin,nur", "help", "he"],
+  ["a pharmacist", "health", "chem,nur", "help", "ch"],
+  ["a dentist", "health", "bio", "help", "b"],
+  ["a veterinarian", "health", "ag,bio", "help", "b"],
+  ["a psychologist or counselor", "health", "psy", "help", "ps"],
+  ["a paramedic", "health", "nur", "help,team", "he"],
+  ["a public health official", "health", "nur,law", "res", "he"],
+  ["a software engineer", "stem", "cs", "code", "c"],
+  ["a data scientist", "stem", "ds,math", "code,math", "c,m"],
+  ["a civil engineer", "stem", "eng,arch", "build,math", "p,m"],
+  ["a mechanical engineer", "stem", "eng", "build,math", "p"],
+  ["an electrical engineer", "stem", "eng", "build,math", "p"],
+  ["a biomedical engineer", "stem", "eng,bio", "build,res", "b,p"],
+  ["a lab scientist", "stem", "bio,chem", "res", "b,ch"],
+  ["an environmental scientist", "env", "env", "res", "es"],
+  ["a park ranger", "env", "env", "help", "es"],
+  ["a farmer or rancher", "env", "ag", "build", "b"],
+  ["an architect", "arts", "arch", "create,build", "a,m"],
+  ["a graphic designer", "arts", "art", "create", "a"],
+  ["an animator or game artist", "arts", "art,film", "create", "a"],
+  ["a film or TV producer", "arts", "film", "create,org", "a"],
+  ["a musician or music teacher", "arts", "mus", "create", "mu"],
+  ["a journalist", "media", "jour", "write,res", "e"],
+  ["an editor or publisher", "media", "wri", "write", "e"],
+  ["a lawyer", "civ", "law", "speak,res", "g"],
+  ["a judge", "civ", "law", "res", "g"],
+  ["a legislator or legislative staffer", "civ", "law", "speak,org", "g"],
+  ["a diplomat or foreign service officer", "civ", "ir,lang", "speak", "g,l"],
+  ["a police officer or detective", "civ", "law", "team", "g"],
+  ["an accountant", "biz", "bus,math", "math", "ec,m"],
+  ["a financial analyst", "biz", "bus,math", "math,res", "ec,m"],
+  ["a startup founder", "biz", "bus", "lead,create", "bu"],
+  ["a marketing manager", "biz", "bus", "create,speak", "bu"],
+  ["a real estate agent", "biz", "bus", "speak", "bu"],
+  ["a teacher", "svc", "edu", "speak,help", "ps"],
+  ["a school counselor", "svc", "edu,psy", "help", "ps"],
+  ["a social worker", "svc", "psy,law", "help", "ps"],
+  ["a historian or museum curator", "hum", "hist", "res", "h"],
+  ["a translator or interpreter", "hum", "lang", "write,speak", "l"],
+  ["an athletic trainer", "ath", "kin,nur", "help", "he"],
+  ["a sports coach", "ath", "kin,edu", "lead", "he"],
+];
+
+/* Certifications open to many high schoolers (age rules vary). [name, category, majors, strengths, subjects, tip] */
+const CERTS: Seed[] = [
+  ["American Red Cross Lifeguarding", "ath", "kin,nur", "help", "he", "Most courses require you to be 15 and pass a swim test."],
+  ["Water Safety Instructor (swim teacher)", "ath", "kin,edu", "help,lead", "he", "Pairs well with a summer job at a pool."],
+  ["Babysitting and Child Care Training", "svc", "edu,nur", "help", "he", "Red Cross offers courses for ages 11 to 15 and older."],
+  ["Teen Mental Health First Aid", "health", "psy,nur", "help", "ps", "Offered through schools for students in grades 10 to 12."],
+  ["Wilderness First Aid", "health", "nur,env,kin", "help", "he", "Useful for outdoor leaders and camp counselors."],
+  ["Microsoft Office Specialist", "biz", "bus", "org", "bu", "Some high schools offer the exam for free."],
+  ["Adobe Certified Professional", "arts", "art,film", "create", "a", "Many schools with design classes offer this exam."],
+  ["CompTIA IT Fundamentals or A+", "stem", "cs", "code,build", "c", "A+ is a recognized entry-level IT certification."],
+  ["AWS Certified Cloud Practitioner", "stem", "cs,ds", "code", "c", "Free training is available before the paid exam."],
+  ["FAA Part 107 Drone Pilot License", "stem", "eng,film", "build", "p", "You must be at least 16 to take the knowledge test."],
+  ["Amateur Radio License", "stem", "eng", "build,res", "p", "There is no age minimum; local radio clubs help you study."],
+  ["ServSafe Food Handler", "biz", "bus,nur", "org", "he", "A quick certificate that helps with restaurant jobs."],
+  ["Youth Sports Referee Certification", "ath", "kin", "lead", "he", "Leagues often pay certified teen referees."],
+  ["Junior Open Water Scuba Certification", "ath", "env,kin", "build", "es,he", "Junior certifications start as young as 10 or 12."],
+  ["Student Pilot Certificate", "stem", "eng", "build,math", "p,m", "You can solo at 16; start with a discovery flight."],
+];
+
+/* University summer programs and research by field. [field, category, majors, strengths, subjects] */
+const FIELDS: Seed[] = [
+  ["computer science", "stem", "cs,ds", "code", "c"],
+  ["engineering", "stem", "eng", "build,math", "p,m"],
+  ["mathematics", "stem", "math", "math", "m"],
+  ["biology", "stem", "bio", "res", "b"],
+  ["chemistry", "stem", "chem", "res", "ch"],
+  ["physics", "stem", "chem,eng", "math,res", "p"],
+  ["medicine", "health", "bio,nur", "res,help", "b"],
+  ["neuroscience", "health", "bio,psy", "res", "b,ps"],
+  ["psychology", "health", "psy", "res", "ps"],
+  ["public health", "health", "nur", "res", "he"],
+  ["environmental science", "env", "env", "res", "es"],
+  ["marine biology", "env", "env,bio", "res", "b,es"],
+  ["business", "biz", "bus", "lead,create", "bu"],
+  ["economics", "biz", "bus", "math,res", "ec"],
+  ["law and government", "civ", "law", "speak,res", "g"],
+  ["international relations", "civ", "ir", "speak,res", "g"],
+  ["history", "hum", "hist", "res,write", "h"],
+  ["philosophy", "hum", "phil", "write", "e"],
+  ["creative writing", "media", "wri", "write,create", "e"],
+  ["journalism", "media", "jour", "write,res", "e"],
+  ["filmmaking", "arts", "film", "create,team", "a"],
+  ["visual art", "arts", "art", "create", "a"],
+  ["architecture", "arts", "arch", "create,build", "a,m"],
+  ["music", "arts", "mus", "create", "mu"],
+  ["theater", "arts", "mus", "create,speak", "t"],
+  ["education", "svc", "edu", "help", "ps"],
+  ["linguistics", "hum", "lang", "res", "l"],
+  ["sports medicine", "ath", "kin,nur", "res", "he,b"],
+  ["data science", "stem", "ds", "code,math", "c,m"],
+  ["robotics", "stem", "eng,cs", "build,code", "p,c"],
+];
+
+const LANGUAGES = [
+  "Spanish", "French", "German", "Italian", "Portuguese", "Mandarin Chinese", "Japanese", "Korean",
+  "Arabic", "Russian", "Hindi", "Vietnamese", "Tagalog", "American Sign Language", "Latin", "Hebrew",
+];
+
+export function generated(): Row[] {
+  const out: Row[] = [];
+
+  for (const [name, cat, maj, str, sub] of CLUBS) {
+    out.push(row(`${name} Club`, "club", cat, maj, str, sub, "L", "p",
+      `Meet regularly with students who share an interest in ${name.toLowerCase()}.`,
+      "Come with one project idea for the club to try this semester."));
+    out.push(row(`Found ${article(name)} ${name} Club at Your School`, "lead", cat, maj, `lead,org,${str.split(",")[0]}`, sub, "M", "p",
+      `Start ${article(name)} ${name.toLowerCase()} club if your school doesn't have one, and grow it into something lasting.`,
+      "You need a teacher sponsor and a short proposal; recruit a co-founder first."));
+  }
+
+  for (const [place, cat, maj, str, sub] of PLACES) {
+    const cap = place.replace(/^(a|an) /, "");
+    out.push(row(`Volunteer at ${place}`, "vol", cat, maj, str, sub, "M", "p",
+      `Give regular volunteer time at ${place} near you.`,
+      `Call ahead and ask about age requirements and a regular weekly shift at the ${cap}.`));
+  }
+
+  for (const [subj, cat, maj, str, sub] of TUTOR_SUBJECTS)
+    for (const [aud, tip] of AUDIENCES)
+      out.push(row(`Tutor ${subj} for ${aud}`, "vol", cat, maj, str, sub, "L", "b",
+        `Help ${aud.replace(" through peer tutoring", "")} with ${subj}, in person or online.`, tip));
+
+  for (const [place, cat, maj, str, sub] of JOBS) {
+    out.push(row(`Part-time job at ${place}`, "work", cat, maj, str, sub, "M", "p",
+      `Earn money and real-world experience working at ${place}.`,
+      "Describe a specific responsibility you took on, not just your title."));
+    out.push(row(`Internship at ${place}`, "work", cat, maj, `${str},res`, sub, "M", "p",
+      `Shadow or intern at ${place} to see the work up close.`,
+      "Ask a family friend or teacher for an introduction, then send a short, specific email."));
+  }
+
+  for (const [name, cat, maj, str, sub, c] of PROJECTS)
+    out.push(row(name, "proj", cat, maj, str, sub, c ?? "M", "b",
+      `${name}. Self-directed projects show initiative because nobody assigned them.`,
+      "Set a finish date and document progress with photos, code, or writing."));
+
+  for (const [topic, cat, maj, str, sub] of COURSES) {
+    const title = topic.replace(/ \(.*\)$/, "");
+    out.push(row(`Free online course in ${title}`, "course", cat, maj, str, sub, "L", "o",
+      `Learn ${topic} through a free course from platforms like MIT OpenCourseWare, Khan Academy, edX, or Coursera.`,
+      "Finish the course and apply it in a small project so it's more than a certificate."));
+  }
+
+  for (const sport of SPORTS) {
+    const s = sport[0].toUpperCase() + sport.slice(1);
+    out.push(row(`${s} (school or club team)`, "club", "ath", "kin,und", "team,comp", "he", "H", "p",
+      `Train and compete in ${sport} on a school, club, or travel team.`,
+      "Keep track of stats, awards, and leadership roles like captain."));
+    out.push(row(`Coach or referee youth ${sport}`, "work", "ath", "kin,edu", "lead,help", "he", "M", "p",
+      `Coach, assist, or officiate ${sport} for younger players.`,
+      "Many leagues pay teen referees after a short certification."));
+  }
+
+  for (const [medium, mstr] of MEDIA)
+    for (const [topic, cat, maj, tstr, sub] of TOPICS)
+      out.push(row(`Run ${article(medium)} ${medium} about ${topic}`, "proj", cat, `${maj},jour`,
+        [mstr, tstr].filter(Boolean).join(","), sub, "M", "o",
+        `Create a regular ${medium} about ${topic} and grow an audience.`,
+        "Publish on a fixed schedule; consistency matters more than polish at first."));
+
+  for (const [form, cat, maj, str, sub] of ARTS) {
+    out.push(row(`Study ${form} and perform or exhibit`, "proj", cat, maj, str, sub, "H", "p",
+      `Take lessons in ${form}, practice consistently, and share your work in recitals, shows, or online.`,
+      "Record or photograph your progress every few months."));
+    out.push(row(`Teach ${form} to younger students`, "vol", cat, `${maj},edu`, `${str.split(",")[0]},help`, sub, "L", "p",
+      `Give free or low-cost ${form} lessons to beginners.`,
+      "Partner with a community center so families can find you."));
+  }
+
+  for (const [cause, cat, maj, , sub] of CAUSES) {
+    out.push(row(`Fundraise for ${cause}`, "lead", cat, maj, "org,lead,help", sub, "L", "b",
+      `Plan an event or online campaign to raise money for an organization working on ${cause}.`,
+      "Set a dollar goal up front and report the result."));
+    out.push(row(`Run an awareness campaign on ${cause}`, "lead", cat, maj, "speak,write,lead", sub, "M", "b",
+      `Organize talks, posts, or events at school to inform people about ${cause}.`,
+      "Partner with an established nonprofit so your campaign points to real help."));
+  }
+
+  for (const [who, cat, maj, str, sub] of SHADOW)
+    out.push(row(`Shadow ${who}`, "work", cat, maj, `${str},res`, sub, "L", "p",
+      `Spend a day or more following ${who} to see what the job is really like.`,
+      "Ask relatives, teachers, and alumni networks; most professionals say yes to a polite, specific request."));
+
+  for (const [cert, cat, maj, str, sub, tip] of CERTS)
+    out.push(row(`Earn ${cert}`, "course", cat, maj, str, sub, "L", "p",
+      `Complete training and earn ${cert}.`, tip ?? "Check age requirements with the certifying organization."));
+
+  for (const [field, cat, maj, str, sub] of FIELDS) {
+    out.push(row(`University summer program in ${field}`, "summer", cat, maj, str, sub, "H", "b",
+      `Many universities run pre-college summer courses in ${field}. Some are selective and free, many are paid.`,
+      "Prioritize free or selective programs and ask every program about financial aid."));
+    out.push(row(`Research project in ${field} with a mentor`, "res", cat, maj, `${str},res,write`, sub, "H", "b",
+      `Find a teacher, graduate student, or professor to guide a small original study in ${field}.`,
+      "Aim to finish with a paper, poster, or science fair entry."));
+  }
+
+  for (const [cause, cat, maj, , sub] of CAUSES)
+    out.push(row(`Volunteer for an organization working on ${cause}`, "vol", cat, maj, "help,team", sub, "M", "b",
+      `Give regular time to a nonprofit focused on ${cause}.`,
+      "Ask for a recurring role, like social media or event setup, so you build real responsibility."));
+
+  for (const lang of LANGUAGES) {
+    out.push(row(`Learn ${lang} to proficiency`, "course", "hum", "lang,ir", "speak,write", "l", "M", "b",
+      `Study ${lang} through classes, apps, or a tutor and aim for a recognized proficiency test.`,
+      "Find a conversation partner; speaking practice speeds things up."));
+    out.push(row(`Volunteer as a ${lang} interpreter`, "vol", "hum", "lang,ir,nur", "speak,help", "l", "L", "p",
+      `Use ${lang} to help families at schools, clinics, or community events.`,
+      "Schools and clinics often need help at events like parent nights."));
+  }
+
+  return out;
+}

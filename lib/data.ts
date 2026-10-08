@@ -1,103 +1,95 @@
-export const MAJORS = [
-  "Computer Science",
-  "Engineering",
-  "Biology / Pre-Med",
-  "Chemistry / Physics",
-  "Mathematics",
-  "Business / Economics",
-  "Political Science / Law",
-  "Psychology",
-  "English / Writing",
-  "Journalism / Media",
-  "Art / Design",
-  "Music / Performing Arts",
-  "Environmental Science",
-  "Education",
-  "Undecided",
-] as const;
-export type Major = (typeof MAJORS)[number];
+import { CURATED } from "./catalog/curated";
+import { generated } from "./catalog/generated";
+import {
+  CATEGORY_CODES, COMMIT_CODES, FORMAT_CODES, MAJOR_CODES, STRENGTH_CODES, SUBJECT_CODES, TYPE_CODES,
+  type Category, type Commitment, type Format, type Major, type OppType, type Row, type Strength, type Subject,
+} from "./taxonomy";
 
-export const STRENGTHS = [
-  "Leadership",
-  "Public speaking",
-  "Writing",
-  "Math & logic",
-  "Coding",
-  "Building / hands-on",
-  "Research",
-  "Creativity",
-  "Teamwork",
-  "Empathy / helping others",
-  "Organization",
-  "Competition",
-] as const;
-export type Strength = (typeof STRENGTHS)[number];
-
-export const CATEGORIES = [
-  "STEM",
-  "Health",
-  "Business",
-  "Civics & Debate",
-  "Writing & Media",
-  "Arts",
-  "Environment",
-  "Service",
-  "Athletics",
-] as const;
-export type Category = (typeof CATEGORIES)[number];
-
-export type Commitment = "low" | "medium" | "high";
+export * from "./taxonomy";
 
 export interface EC {
+  slug: string;
   name: string;
+  type: OppType;
   category: Category;
-  description: string;
   majors: Major[];
   strengths: Strength[];
+  subjects: Subject[];
   commitment: Commitment;
+  format: Format;
+  description: string;
   tip: string;
+  curated: boolean;
 }
-
-export const ECS: EC[] = [
-  { name: "Competitive Programming (USACO)", category: "STEM", description: "Solve algorithmic problems in online contests and climb divisions.", majors: ["Computer Science", "Mathematics"], strengths: ["Coding", "Math & logic", "Competition"], commitment: "medium", tip: "Start at Bronze; past problems are free on usaco.org." },
-  { name: "Hackathons", category: "STEM", description: "Build a project with a team in 24–48 hours.", majors: ["Computer Science", "Engineering", "Business / Economics"], strengths: ["Coding", "Teamwork", "Creativity"], commitment: "low", tip: "MLH lists student hackathons, many virtual." },
-  { name: "Personal App / Open Source Project", category: "STEM", description: "Ship something real that people use, or contribute to open source.", majors: ["Computer Science", "Engineering"], strengths: ["Coding", "Creativity", "Building / hands-on"], commitment: "medium", tip: "Solve a problem at your own school. Real users make a great story." },
-  { name: "Robotics Team (FRC / FTC / VEX)", category: "STEM", description: "Design, build and program robots for competitions.", majors: ["Engineering", "Computer Science"], strengths: ["Building / hands-on", "Teamwork", "Coding", "Competition"], commitment: "high", tip: "Non-technical roles (outreach, business) count too." },
-  { name: "Science Olympiad", category: "STEM", description: "Team competition across 23 STEM events.", majors: ["Biology / Pre-Med", "Chemistry / Physics", "Engineering", "Environmental Science"], strengths: ["Research", "Teamwork", "Competition", "Building / hands-on"], commitment: "medium", tip: "Pick events that match your intended major." },
-  { name: "Math Competitions (AMC / AIME)", category: "STEM", description: "Individual problem-solving contests leading to olympiad levels.", majors: ["Mathematics", "Computer Science", "Chemistry / Physics"], strengths: ["Math & logic", "Competition"], commitment: "low", tip: "Art of Problem Solving has great prep resources." },
-  { name: "Independent Research / Science Fair", category: "STEM", description: "Run your own research project, enter ISEF/regional fairs.", majors: ["Biology / Pre-Med", "Chemistry / Physics", "Environmental Science", "Psychology", "Engineering"], strengths: ["Research", "Writing", "Math & logic"], commitment: "high", tip: "Cold-email local professors with a specific, short ask." },
-  { name: "Hospital / Clinic Volunteering", category: "Health", description: "Volunteer in a healthcare setting with patients.", majors: ["Biology / Pre-Med", "Psychology"], strengths: ["Empathy / helping others", "Teamwork"], commitment: "medium", tip: "Consistency over years beats a single summer." },
-  { name: "HOSA – Future Health Professionals", category: "Health", description: "Health-science competitions and leadership.", majors: ["Biology / Pre-Med"], strengths: ["Competition", "Public speaking", "Leadership"], commitment: "medium", tip: "Start a chapter if your school doesn't have one." },
-  { name: "Crisis Text Line / Peer Counseling", category: "Health", description: "Train in peer support and mental-health listening.", majors: ["Psychology", "Education"], strengths: ["Empathy / helping others"], commitment: "medium", tip: "Many peer programs train students 16+." },
-  { name: "DECA / FBLA", category: "Business", description: "Business case competitions, roleplays, and presentations.", majors: ["Business / Economics"], strengths: ["Public speaking", "Competition", "Leadership"], commitment: "medium", tip: "Roleplay events reward confident speaking." },
-  { name: "Start a Small Business", category: "Business", description: "Sell a product or service and track real revenue.", majors: ["Business / Economics", "Art / Design"], strengths: ["Leadership", "Creativity", "Organization"], commitment: "high", tip: "Numbers (customers, revenue) make it concrete." },
-  { name: "Economics Challenge / Investment Club", category: "Business", description: "Compete in econ contests or run a mock portfolio.", majors: ["Business / Economics", "Mathematics"], strengths: ["Math & logic", "Research", "Competition"], commitment: "low", tip: "The National Economics Challenge is free to enter." },
-  { name: "Speech & Debate", category: "Civics & Debate", description: "Compete in policy, LD, public forum, or speech events.", majors: ["Political Science / Law", "English / Writing", "Business / Economics"], strengths: ["Public speaking", "Research", "Competition"], commitment: "high", tip: "Public Forum is the most beginner-friendly." },
-  { name: "Model UN", category: "Civics & Debate", description: "Represent countries and negotiate resolutions.", majors: ["Political Science / Law", "Business / Economics"], strengths: ["Public speaking", "Teamwork", "Leadership"], commitment: "medium", tip: "Chairing a committee shows leadership." },
-  { name: "Mock Trial", category: "Civics & Debate", description: "Play attorneys and witnesses in simulated trials.", majors: ["Political Science / Law", "English / Writing"], strengths: ["Public speaking", "Teamwork", "Competition"], commitment: "medium", tip: "Witness roles are great for theater kids too." },
-  { name: "Student Government", category: "Civics & Debate", description: "Represent your class and run school initiatives.", majors: ["Political Science / Law", "Business / Economics", "Education"], strengths: ["Leadership", "Organization", "Public speaking"], commitment: "medium", tip: "Highlight one concrete thing you changed." },
-  { name: "Local Campaign / Civic Internship", category: "Civics & Debate", description: "Work for a campaign, council member, or advocacy group.", majors: ["Political Science / Law"], strengths: ["Organization", "Teamwork", "Writing"], commitment: "medium", tip: "Local offices often welcome high-school volunteers." },
-  { name: "School Newspaper / Yearbook", category: "Writing & Media", description: "Report, edit, and publish for your school.", majors: ["Journalism / Media", "English / Writing"], strengths: ["Writing", "Teamwork", "Organization"], commitment: "medium", tip: "Aim for an editor role by senior year." },
-  { name: "Literary Magazine / Writing Contests", category: "Writing & Media", description: "Publish creative work; enter Scholastic, YoungArts, etc.", majors: ["English / Writing", "Art / Design"], strengths: ["Writing", "Creativity"], commitment: "low", tip: "Scholastic Art & Writing Awards are a big one." },
-  { name: "Podcast or YouTube Channel", category: "Writing & Media", description: "Create media on a topic you care about.", majors: ["Journalism / Media", "Music / Performing Arts", "Business / Economics"], strengths: ["Creativity", "Public speaking", "Organization"], commitment: "medium", tip: "Pick a niche tied to your major." },
-  { name: "Art Portfolio & Exhibitions", category: "Arts", description: "Build a portfolio and show work in galleries/contests.", majors: ["Art / Design"], strengths: ["Creativity", "Building / hands-on"], commitment: "high", tip: "Art schools review portfolios, so start early." },
-  { name: "Theater / Drama Production", category: "Arts", description: "Act, direct, or run tech crew for shows.", majors: ["Music / Performing Arts", "English / Writing"], strengths: ["Creativity", "Teamwork", "Public speaking"], commitment: "high", tip: "Tech crew is great for engineers too." },
-  { name: "Band / Orchestra / Choir", category: "Arts", description: "Perform in school or regional ensembles.", majors: ["Music / Performing Arts"], strengths: ["Creativity", "Teamwork"], commitment: "high", tip: "All-State auditions add a strong distinction." },
-  { name: "Environmental Club / Restoration Projects", category: "Environment", description: "Lead cleanups, gardens, or sustainability campaigns.", majors: ["Environmental Science", "Biology / Pre-Med", "Political Science / Law"], strengths: ["Leadership", "Organization", "Building / hands-on"], commitment: "medium", tip: "Measure impact (lbs of trash, trees planted)." },
-  { name: "Envirothon", category: "Environment", description: "Team competition on ecology, soils, forestry, and water.", majors: ["Environmental Science", "Biology / Pre-Med"], strengths: ["Research", "Teamwork", "Competition"], commitment: "medium", tip: "Great fit if you love being outdoors." },
-  { name: "Tutoring / Teaching Younger Students", category: "Service", description: "Tutor peers or run a free class in your community.", majors: ["Education", "Mathematics", "English / Writing", "Undecided"], strengths: ["Empathy / helping others", "Leadership", "Public speaking"], commitment: "low", tip: "Starting a program > just joining one." },
-  { name: "Camp Counselor / Youth Mentor", category: "Service", description: "Lead groups of kids in camps or mentorship programs.", majors: ["Education", "Psychology"], strengths: ["Leadership", "Empathy / helping others", "Teamwork"], commitment: "medium", tip: "Summer-only, so it fits busy school years." },
-  { name: "Community Service Club (Key Club, etc.)", category: "Service", description: "Organize service projects in your community.", majors: ["Undecided", "Education", "Political Science / Law"], strengths: ["Empathy / helping others", "Organization", "Teamwork"], commitment: "low", tip: "Run for an officer position." },
-  { name: "Part-Time Job", category: "Business", description: "Work a job. Colleges value responsibility.", majors: ["Undecided", "Business / Economics"], strengths: ["Organization", "Teamwork"], commitment: "medium", tip: "Jobs count as ECs; describe what you learned." },
-  { name: "Varsity Sports", category: "Athletics", description: "Train and compete on a school team.", majors: ["Undecided", "Education", "Biology / Pre-Med"], strengths: ["Teamwork", "Competition", "Leadership"], commitment: "high", tip: "Captain roles show leadership." },
-  { name: "Psychology Research Assistant / Survey Project", category: "Health", description: "Assist a lab or run your own survey study.", majors: ["Psychology", "Biology / Pre-Med"], strengths: ["Research", "Math & logic", "Writing"], commitment: "medium", tip: "Even a school-wide survey study is a solid start." },
-  { name: "Physics / Chemistry Olympiad", category: "STEM", description: "Individual exams leading to national teams.", majors: ["Chemistry / Physics", "Engineering"], strengths: ["Math & logic", "Research", "Competition"], commitment: "low", tip: "F=ma and USNCO are the entry exams." },
-  { name: "Design / Engineering Club (Maker Space)", category: "STEM", description: "Build gadgets, 3D print, and prototype ideas.", majors: ["Engineering", "Art / Design"], strengths: ["Building / hands-on", "Creativity"], commitment: "low", tip: "Document builds with photos for applications." },
-];
 
 export const slugify = (name: string) =>
   name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-export const findBySlug = (slug: string) => ECS.find((ec) => slugify(ec.name) === slug);
+function lookup<M extends Record<string, string>>(map: M, codes: string, row: string): M[keyof M][] {
+  return [...new Set(codes.split(",").map((c) => c.trim()).filter(Boolean))].map((c) => {
+    if (!(c in map)) throw new Error(`Unknown code "${c}" in catalog row: ${row}`);
+    return map[c as keyof M];
+  });
+}
 
-export const HOURS: Record<Commitment, string> = { low: "1 to 3 hrs/wk", medium: "4 to 8 hrs/wk", high: "9+ hrs/wk" };
+function parse(row: Row, curated: boolean): EC {
+  const f = row.split("|");
+  if (f.length !== 10) throw new Error(`Catalog row needs 10 fields: ${row}`);
+  const [name, type, cat, maj, str, sub, c, fmt, description, tip] = f;
+  const one = <M extends Record<string, string>>(map: M, code: string) => lookup(map, code, row)[0];
+  return {
+    slug: slugify(name),
+    name,
+    type: one(TYPE_CODES, type),
+    category: one(CATEGORY_CODES, cat),
+    majors: lookup(MAJOR_CODES, maj, row),
+    strengths: lookup(STRENGTH_CODES, str, row),
+    subjects: lookup(SUBJECT_CODES, sub, row),
+    commitment: one(COMMIT_CODES, c),
+    format: one(FORMAT_CODES, fmt),
+    description,
+    tip,
+    curated,
+  };
+}
+
+function build(): EC[] {
+  const all = [...CURATED.map((r) => parse(r, true)), ...generated().map((r) => parse(r, false))];
+  const seen = new Set<string>();
+  return all.filter((ec) => (seen.has(ec.slug) ? false : (seen.add(ec.slug), true)));
+}
+
+export const ECS: EC[] = build();
+const BY_SLUG = new Map(ECS.map((ec) => [ec.slug, ec]));
+export const findBySlug = (slug: string) => BY_SLUG.get(slug);
+
+/* Courses students can log grades for, grouped by subject. */
+export const COURSES: Record<Subject, string[]> = {
+  Math: ["Algebra 1", "Geometry", "Algebra 2", "Precalculus", "Calculus AB", "Calculus BC", "Statistics", "Multivariable Calculus"],
+  "Computer Science": ["Intro to Computer Science", "AP Computer Science Principles", "AP Computer Science A", "Web Design", "Data Structures"],
+  Biology: ["Biology", "AP Biology", "Anatomy and Physiology", "Marine Biology", "Genetics"],
+  Chemistry: ["Chemistry", "AP Chemistry", "Organic Chemistry"],
+  Physics: ["Physics", "AP Physics 1", "AP Physics 2", "AP Physics C", "Engineering Design", "Astronomy"],
+  "Environmental Science": ["Earth Science", "Environmental Science", "AP Environmental Science", "Agriculture Science"],
+  English: ["English 9", "English 10", "English 11", "English 12", "AP English Language", "AP English Literature", "Creative Writing", "Journalism"],
+  History: ["World History", "U.S. History", "AP World History", "AP U.S. History", "AP European History", "Art History"],
+  Government: ["Government", "AP U.S. Government", "AP Comparative Government", "Civics", "Law"],
+  Economics: ["Economics", "AP Macroeconomics", "AP Microeconomics", "Personal Finance"],
+  Psychology: ["Psychology", "AP Psychology", "Sociology"],
+  "World Languages": ["Spanish", "French", "German", "Mandarin", "Japanese", "Latin", "AP Spanish", "AP French", "Other language"],
+  "Visual Art": ["Art", "Drawing and Painting", "Digital Art", "Photography", "AP Art and Design", "Ceramics"],
+  Music: ["Band", "Orchestra", "Choir", "Music Theory", "AP Music Theory"],
+  Theater: ["Theater", "Drama", "Film Studies"],
+  "Health / PE": ["Health", "Physical Education", "Sports Medicine", "Nutrition"],
+  Business: ["Business", "Accounting", "Marketing", "Entrepreneurship"],
+};
+
+export const LETTER_GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"] as const;
+export type LetterGrade = (typeof LETTER_GRADES)[number];
+export const GRADE_POINTS: Record<LetterGrade, number> = {
+  "A+": 4.3, A: 4, "A-": 3.7, "B+": 3.3, B: 3, "B-": 2.7, "C+": 2.3, C: 2, "C-": 1.7, D: 1, F: 0,
+};
+export const LEVELS = ["Regular", "Honors", "AP / IB", "Dual enrollment"] as const;
+export type Level = (typeof LEVELS)[number];
+/** Small bump for harder classes when judging subject strength. */
+export const LEVEL_BONUS: Record<Level, number> = { Regular: 0, Honors: 0.15, "AP / IB": 0.3, "Dual enrollment": 0.3 };
